@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "799041354975",
+    "project_id": "bus-fare-collection",
+    "storage_bucket": "bus-fare-collection.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:799041354975:android:8ae056bc5c17c6424afd6a",
+        "android_client_info": {
+          "package_name": "com.example.major_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "799041354975-h7g0gq72rg9qbg66gtkekcbporj18men.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.major_project",
+            "certificate_hash": "c0929dcc4694e1e5f4fca1797b2fd64eb6637914"
+          }
+        },
+        {
+          "client_id": "799041354975-r42g9t6dfnsm37ic0i1c5llg0g7cgl9c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1-t56QpBTSdTFkbR6alRISmyTq_-IK8I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "799041354975-r42g9t6dfnsm37ic0i1c5llg0g7cgl9c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "799041354975-7m6cgr37iqii4cjqv60beg7jj580ermg.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.majorProject"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

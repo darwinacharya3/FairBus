@@ -1,0 +1,39 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "bus-fare-collection",
+          "appId": "1:799041354975:android:8ae056bc5c17c6424afd6a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "bus-fare-collection",
+          "configurations": {
+            "android": "1:799041354975:android:8ae056bc5c17c6424afd6a",
+            "ios": "1:799041354975:ios:39f6f53bba692e714afd6a"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        
+        "npm --prefix %RESOURCE_DIR% run build"
+      ]
+    }
+  ]
+}
