@@ -6,8 +6,6 @@ import 'package:major_project/views/welcome_screen.dart';
 import 'package:major_project/views/login_screen.dart';
 import 'firebase_options.dart';
 import 'package:major_project/views/forget_password_screen.dart';
-// import 'package:major_project/views/reset_password_screen.dart';
-// import 'package:major_project/views/otp_verification_screen.dart';
 import 'package:major_project/views/home_screen.dart';
 
 
@@ -32,8 +30,6 @@ class Myapp extends StatelessWidget {
     GetPage(name: '/welcome', page: () => const WelcomeScreen()),
     GetPage(name: '/login', page: () => const LoginScreen()),
     GetPage(name: '/forgetPassword', page: () => const ForgetPasswordScreen()),
-    // GetPage(name: '/otpVerification', page: () => const OtpVerificationScreen()),
-    // GetPage(name: '/resetPassword', page: () => const ResetPasswordScreen()),
     GetPage(name: '/home', page: () => const HomeScreen()), // Assuming home screen exists
   ],
     theme: ThemeData(
