@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'full_map_screen.dart'; // Import the full map screen
+import 'full_map_screen_widget/full_map_screen.dart'; // Import the full map screen
 
 class BusRoutesSection extends StatelessWidget {
   const BusRoutesSection({super.key});
