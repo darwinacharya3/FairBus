@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:major_project/controller/auth_controller.dart';
 import 'package:major_project/views/setup_profile_screen.dart';
-import 'package:major_project/views/login_screen.dart';
+// import 'package:major_project/views/login_screen.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
-  const AppBarWidget({super.key});
+  final AuthController authController = Get.find<AuthController>();
   
+  AppBarWidget({super.key});
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.green, // Green color theme
+      backgroundColor: Colors.green,
       title: Text(
         'Bus Fare Collection',
         style: GoogleFonts.poppins(
@@ -20,50 +22,37 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        // Profile Icon with Popup Menu
         PopupMenuButton<String>(
           icon: const Icon(Icons.person),
-          onSelected: (value) {
+          onSelected: (value) async {
             if (value == 'setupProfile') {
-              // Navigate to Setup Profile screen
               Get.to(() => SetupProfileScreen());
             } else if (value == 'logout') {
-              // Perform logout
-              _logout(context);
+              await _showLogoutDialog(context);
             }
           },
-          itemBuilder: (BuildContext context) {
-            return [
-              // Popup Menu items styled to match the app theme
-              PopupMenuItem<String>(
-                value: 'setupProfile',
-                child: Text(
-                  'Setup Profile',
-                  style: GoogleFonts.poppins(
-                    color: Colors.green, // Text color matches app theme
-                  ),
-                ),
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem<String>(
+              value: 'setupProfile',
+              child: Text(
+                'Setup Profile',
+                style: GoogleFonts.poppins(color: Colors.green),
               ),
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: Text(
-                  'Logout',
-                  style: GoogleFonts.poppins(
-                    color: Colors.red, // Red color for logout to signify action
-                  ),
-                ),
+            ),
+            PopupMenuItem<String>(
+              value: 'logout',
+              child: Text(
+                'Logout',
+                style: GoogleFonts.poppins(color: Colors.red),
               ),
-            ];
-          },
-          color: Colors.white, // White background for the popup
+            ),
+          ],
+          color: Colors.white,
           elevation: 5,
         ),
-        
-        // Notification Icon (Settings)
         IconButton(
           icon: const Icon(Icons.notifications),
           onPressed: () {
-            // Handle notifications click
             print("Notification Icon clicked");
           },
         ),
@@ -71,20 +60,33 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight); // Standard AppBar height
-
-  // Logout method
-  Future<void> _logout(BuildContext context) async {
-    try {
-      await FirebaseAuth.instance.signOut();
-      // Navigate to the login screen after logout
-      Get.offAll(() => const LoginScreen());  // Replace with your actual login screen
-    } catch (e) {
-      print("Error logging out: $e");
-      // Optionally show an error dialog or message
-    }
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Logout'),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await authController.logoutUser();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
 
@@ -97,58 +99,130 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
 // import 'package:google_fonts/google_fonts.dart';
+// // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:major_project/views/setup_profile_screen.dart';
-// import 'package:major_project/views/login_screen.dart';
+// // import 'package:major_project/views/login_screen.dart';
+// import 'package:major_project/controller/auth_controller.dart';
+// // import 'package:major_project/controllers/auth_controller.dart';
 
 // class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
-//   const AppBarWidget({super.key});
-
+//   final AuthController authController = Get.find<AuthController>();
+  
+//   AppBarWidget({super.key});
+  
 //   @override
 //   Widget build(BuildContext context) {
 //     return AppBar(
 //       backgroundColor: Colors.green,
 //       title: Text(
 //         'Bus Fare Collection',
-//         style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+//         style: GoogleFonts.poppins(
+//           fontSize: 22,
+//           fontWeight: FontWeight.bold,
+//         ),
 //       ),
+//       leading: Navigator.canPop(context)
+//           ? IconButton(
+//               icon: const Icon(Icons.arrow_back),
+//               onPressed: () => Navigator.pop(context),
+//             )
+//           : null,
 //       actions: [
 //         PopupMenuButton<String>(
 //           icon: const Icon(Icons.person),
-//           onSelected: (value) {
-//             if (value == 'setupProfile') {
-//               Get.to(() => SetupProfileScreen());
-//             } else if (value == 'logout') {
-//               _logout(context);
+//           onSelected: (value) async {
+//             switch (value) {
+//               case 'setupProfile':
+//                 Get.to(() => SetupProfileScreen());
+//                 break;
+//               case 'logout':
+//                 await _showLogoutConfirmation(context);
+//                 break;
 //             }
 //           },
-//           itemBuilder: (context) => [
-//             PopupMenuItem(
-//               value: 'setupProfile',
-//               child: Text('Setup Profile', style: GoogleFonts.poppins(),
+//           itemBuilder: (BuildContext context) {
+//             return [
+//               PopupMenuItem<String>(
+//                 value: 'setupProfile',
+//                 child: Text(
+//                   'Setup Profile',
+//                   style: GoogleFonts.poppins(
+//                     color: Colors.green,
+//                   ),
+//                 ),
 //               ),
-              
-//             ),
-//             PopupMenuItem(
-//               value: 'logout',
-//               child: Text('Logout', style: GoogleFonts.poppins()),
-//             ),
-//           ],
+//               PopupMenuItem<String>(
+//                 value: 'logout',
+//                 child: Text(
+//                   'Logout',
+//                   style: GoogleFonts.poppins(
+//                     color: Colors.red,
+//                   ),
+//                 ),
+//               ),
+//             ];
+//           },
+//           color: Colors.white,
+//           elevation: 5,
 //         ),
 //         IconButton(
 //           icon: const Icon(Icons.notifications),
 //           onPressed: () {
-//             debugPrint("Notification icon tapped.");
+//             print("Notification Icon clicked");
 //           },
 //         ),
 //       ],
 //     );
 //   }
 
+//   Future<void> _showLogoutConfirmation(BuildContext context) async {
+//     final bool confirm = await showDialog(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return AlertDialog(
+//           title: Text(
+//             'Confirm Logout',
+//             style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+//           ),
+//           content: Text(
+//             'Are you sure you want to logout?',
+//             style: GoogleFonts.poppins(),
+//           ),
+//           actions: [
+//             TextButton(
+//               child: Text(
+//                 'Cancel',
+//                 style: GoogleFonts.poppins(color: Colors.grey),
+//               ),
+//               onPressed: () => Navigator.of(context).pop(false),
+//             ),
+//             TextButton(
+//               child: Text(
+//                 'Logout',
+//                 style: GoogleFonts.poppins(color: Colors.red),
+//               ),
+//               onPressed: () => Navigator.of(context).pop(true),
+//             ),
+//           ],
+//         );
+//       },
+//     ) ?? false;
+
+//     if (confirm) {
+//       try {
+//         await authController.logoutUser();
+//       } catch (e) {
+//         Get.snackbar(
+//           "Error",
+//           "Failed to logout. Please try again.",
+//           backgroundColor: Colors.red.withOpacity(0.1),
+//           duration: const Duration(seconds: 3),
+//         );
+//       }
+//     }
+//   }
+
 //   @override
 //   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-
-//   Future<void> _logout(BuildContext context) async {
-//     debugPrint("User logged out.");
-//     Get.offAll(() => const LoginScreen());
-//   }
 // }
+

@@ -113,6 +113,16 @@ class AuthController extends GetxController {
       return false;
     }
   }
+
+  Future<void> logoutUser() async {
+    try {
+      await _auth.signOut();
+      Get.offAllNamed('/login'); // Navigate to login screen
+    } catch (e) {
+      Get.snackbar("Error", "Failed to logout: ${e.toString()}");
+    }
+  }
+
 }
 
 
