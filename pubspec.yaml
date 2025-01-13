@@ -64,6 +64,7 @@ dependencies:
   vector_math: ^2.1.4
   flutter_tts: ^4.2.1
   device_info_plus: ^11.2.0
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
