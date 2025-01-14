@@ -4,6 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
+class VerificationStatus {
+  static const Color pending = Color(0xFFFFA726);
+  static const Color verified = Color(0xFF66BB6A);
+  static const Color rejected = Color(0xFFEF5350);
+}
+
 class UserVerificationScreen extends StatelessWidget {
   final Map<String, dynamic> userData;
   final String userId;
@@ -425,30 +431,128 @@ class UserVerificationScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verify Documents'),
-        backgroundColor: const Color(0xFFA8E6CF),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text(
+        'Verify Documents',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildUserInfoSection(),
-            const SizedBox(height: 16),
-            _buildDocumentViewer(),
-            const SizedBox(height: 16),
-            _buildVerificationHistorySection(),
-            const SizedBox(height: 16),
-            _buildVerificationForm(),
-          ],
-        ),
+      backgroundColor: Colors.green[600],
+      elevation: 2,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Get.back(),
       ),
-    );
+    ),
+    backgroundColor: Colors.grey[100],
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status Banner
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Verification Request',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[800],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(
+                      userData['verificationStatus'] ?? 'pending'
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    (userData['verificationStatus'] ?? 'PENDING').toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          _buildUserInfoSection(),
+          const SizedBox(height: 16),
+          _buildDocumentViewer(),
+          const SizedBox(height: 16),
+          _buildVerificationHistorySection(),
+          const SizedBox(height: 16),
+          _buildVerificationForm(),
+        ],
+      ),
+    ),
+  );
+}
+
+Color _getStatusColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'verified':
+      return VerificationStatus.verified;
+    case 'rejected':
+      return VerificationStatus.rejected;
+    case 'pending':
+    default:
+      return VerificationStatus.pending;
   }
 }
+}
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Verify Documents'),
+//         backgroundColor: const Color(0xFFA8E6CF),
+//       ),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             _buildUserInfoSection(),
+//             const SizedBox(height: 16),
+//             _buildDocumentViewer(),
+//             const SizedBox(height: 16),
+//             _buildVerificationHistorySection(),
+//             const SizedBox(height: 16),
+//             _buildVerificationForm(),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 
 
