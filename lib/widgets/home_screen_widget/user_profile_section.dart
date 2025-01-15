@@ -182,7 +182,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
     }
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -209,6 +209,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
               ),
             )
           : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Stack(
                   children: [
@@ -271,12 +272,16 @@ class _UserProfileSectionState extends State<UserProfileSection> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            "Welcome, $_username!",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                          Expanded(
+                            child: Text(
+                              "Welcome, $_username!",
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -310,6 +315,147 @@ class _UserProfileSectionState extends State<UserProfileSection> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Container(
+  //     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  //     padding: const EdgeInsets.all(16),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(20),
+  //       border: Border.all(
+  //         color: const Color(0xFF4CAF50).withOpacity(0.3),
+  //         width: 1.5,
+  //       ),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 10,
+  //           offset: const Offset(0, 4),
+  //         ),
+  //       ],
+  //     ),
+  //     child: _isLoading 
+  //         ? const Center(
+  //             child: CircularProgressIndicator(
+  //               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+  //             ),
+  //           )
+  //         : Row(
+  //             children: [
+  //               Stack(
+  //                 children: [
+  //                   Container(
+  //                     decoration: BoxDecoration(
+  //                       shape: BoxShape.circle,
+  //                       border: Border.all(
+  //                         color: const Color(0xFF4CAF50),
+  //                         width: 2,
+  //                       ),
+  //                     ),
+  //                     child: ClipOval(
+  //                       child: _profileImageUrl.isNotEmpty
+  //                           ? CachedNetworkImage(
+  //                               imageUrl: _profileImageUrl,
+  //                               width: 80,
+  //                               height: 80,
+  //                               fit: BoxFit.cover,
+  //                               placeholder: (context, url) => Container(
+  //                                 color: Colors.grey[200],
+  //                                 child: const Icon(Icons.person, size: 40),
+  //                               ),
+  //                               errorWidget: (context, url, error) =>
+  //                                   const Icon(Icons.error),
+  //                             )
+  //                           : Container(
+  //                               width: 80,
+  //                               height: 80,
+  //                               color: Colors.grey[200],
+  //                               child: const Icon(Icons.person, size: 40),
+  //                             ),
+  //                     ),
+  //                   ),
+  //                   Positioned(
+  //                     bottom: 0,
+  //                     right: 0,
+  //                     child: GestureDetector(
+  //                       onTap: _isLoading ? null : _uploadNewProfileImage,
+  //                       child: Container(
+  //                         padding: const EdgeInsets.all(6),
+  //                         decoration: BoxDecoration(
+  //                           color: const Color(0xFF4CAF50),
+  //                           shape: BoxShape.circle,
+  //                           border: Border.all(color: Colors.white, width: 2),
+  //                         ),
+  //                         child: const Icon(
+  //                           Icons.camera_alt,
+  //                           size: 14,
+  //                           color: Colors.white,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //               const SizedBox(width: 16),
+  //               Expanded(
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     Row(
+  //                       children: [
+  //                         Text(
+  //                           "Welcome, $_username!",
+  //                           style: GoogleFonts.poppins(
+  //                             fontSize: 18,
+  //                             fontWeight: FontWeight.bold,
+  //                             color: Colors.black87,
+  //                           ),
+  //                         ),
+  //                         const SizedBox(width: 8),
+  //                         _buildVerificationBadge(),
+  //                       ],
+  //                     ),
+  //                     const SizedBox(height: 4),
+  //                     Container(
+  //                       padding: const EdgeInsets.symmetric(
+  //                         horizontal: 12,
+  //                         vertical: 6,
+  //                       ),
+  //                       decoration: BoxDecoration(
+  //                         color: const Color(0xFF4CAF50).withOpacity(0.1),
+  //                         borderRadius: BorderRadius.circular(20),
+  //                       ),
+  //                       child: Text(
+  //                         "NPR ${_balance.toStringAsFixed(2)}",
+  //                         style: GoogleFonts.poppins(
+  //                           fontSize: 14,
+  //                           color: const Color(0xFF4CAF50),
+  //                           fontWeight: FontWeight.w600,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //   );
+  // }
+// }
 
 
 
