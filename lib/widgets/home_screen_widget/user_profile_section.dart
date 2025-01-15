@@ -76,7 +76,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
         _errorMessage = "";
       });
     } catch (e) {
-      print("Error in _loadUserData: $e");
+      // print("Error in _loadUserData: $e");
       setState(() {
         _isError = true;
         _errorMessage = e.toString();
@@ -132,7 +132,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
         }
       }
     } catch (e) {
-      print("Error in _uploadNewProfileImage: $e");
+      // print("Error in _uploadNewProfileImage: $e");
       Get.snackbar(
         "Error",
         "Failed to update profile picture: $e",

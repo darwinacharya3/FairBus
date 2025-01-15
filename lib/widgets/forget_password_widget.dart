@@ -138,7 +138,7 @@ class _ForgetPasswordWidgetState extends State<ForgetPasswordWidget> {
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColors.greenColor),
+          borderSide: const BorderSide(color: AppColors.greenColor),
           borderRadius: BorderRadius.circular(10),
         ),
       ),

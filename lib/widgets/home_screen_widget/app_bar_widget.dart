@@ -53,7 +53,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
         IconButton(
           icon: const Icon(Icons.notifications),
           onPressed: () {
-            print("Notification Icon clicked");
+            // print("Notification Icon clicked");
           },
         ),
       ],

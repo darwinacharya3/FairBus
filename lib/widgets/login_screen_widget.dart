@@ -245,7 +245,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
         ),
         counterText: "", // Hides the max length counter
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColors.greenColor),
+          borderSide: const BorderSide(color: AppColors.greenColor),
           borderRadius: BorderRadius.circular(10),
         ),
       ),

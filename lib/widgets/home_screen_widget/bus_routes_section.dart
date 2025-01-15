@@ -32,7 +32,7 @@ class BusRoutesSection extends StatelessWidget {
                   // Navigate to the full map screen
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => FullMapScreen()),
+                    MaterialPageRoute(builder: (context) => const FullMapScreen()),
                   );
                 },
                 child: Stack(

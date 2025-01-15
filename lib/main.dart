@@ -92,10 +92,10 @@ class RouteGuard extends GetMiddleware {
       final adminGuard = Get.find<AdminGuard>();
       bool isAdmin = await adminGuard.isAdmin();
       
-      print("RouteGuard - Checking admin status: $isAdmin"); 
+      // print("RouteGuard - Checking admin status: $isAdmin"); 
       
       if (!isAdmin) {
-        print("Access denied - Redirecting to home");
+        // print("Access denied - Redirecting to home");
         Get.snackbar(
           'Access Denied',
           'You need admin privileges to access this section',
@@ -105,10 +105,10 @@ class RouteGuard extends GetMiddleware {
         return GetNavConfig.fromRoute('/home');
       }
       
-      print("Access granted - Proceeding to admin route: ${route.location}");
+      // print("Access granted - Proceeding to admin route: ${route.location}");
       return route;  // Return the original route instead of using super
     } catch (e) {
-      print("RouteGuard error: $e");
+      // print("RouteGuard error: $e");
       return GetNavConfig.fromRoute('/home');
     }
   }

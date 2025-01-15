@@ -134,11 +134,11 @@ class AuthController extends GetxController {
     bool isAdminUser = userData['isAdmin'] == true; // Use strict comparison
     isAdmin.value = isAdminUser;
 
-    print("Login successful - Admin status: $isAdminUser"); // Debug print
+    // print("Login successful - Admin status: $isAdminUser"); // Debug print
 
     // Store admin status in GetX state
    if (isAdminUser) {
-  print("Admin login detected - Verifying permissions");
+  // print("Admin login detected - Verifying permissions");
   bool adminVerified = await Get.find<AdminGuard>().isAdmin();
   
   if (!adminVerified) {
@@ -147,17 +147,17 @@ class AuthController extends GetxController {
     return false;
   }
   
-  print("Admin verification successful - Redirecting to admin panel");
+  // print("Admin verification successful - Redirecting to admin panel");
   // Change this line to match exact route name
   await Get.offAllNamed('/admin/users');  // Add await here
 } else {
-  print("Regular user login - Redirecting to home");
+  // print("Regular user login - Redirecting to home");
   await Get.offAllNamed('/home');  // Add await here
 }
 
     return true;
   } catch (e) {
-    print("Login error: $e");
+    // print("Login error: $e");
     Get.snackbar("Error", "Login failed: ${e.toString()}");
     return false;
   }
@@ -175,7 +175,7 @@ class AuthController extends GetxController {
       
       return (doc.data() as Map<String, dynamic>)['isVerified'] ?? false;
     } catch (e) {
-      print("Error checking verification status: $e");
+      // print("Error checking verification status: $e");
       return false;
     }
   }
@@ -196,7 +196,7 @@ class AuthController extends GetxController {
       isAdmin.value = isAdminUser;
       return isAdminUser;
     } catch (e) {
-      print("Error checking admin status: $e");
+      // print("Error checking admin status: $e");
       return false;
     }
   }

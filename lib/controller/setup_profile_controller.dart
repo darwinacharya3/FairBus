@@ -71,7 +71,7 @@ class SetupProfileController extends GetxController {
         });
       }
     } catch (e) {
-      print("Error loading saved profile: $e");
+      // print("Error loading saved profile: $e");
       Get.snackbar("Error", "Failed to load saved profile data");
     }
   }
@@ -86,7 +86,7 @@ class SetupProfileController extends GetxController {
         onSuccess(file);
       }
     } catch (e) {
-      print("Error loading image from URL: $e");
+      // print("Error loading image from URL: $e");
     }
   }
 
@@ -102,7 +102,7 @@ class SetupProfileController extends GetxController {
       }
       return null;
     } catch (e) {
-      print("Error fetching username: $e");
+      // print("Error fetching username: $e");
       return null;
     }
   }
@@ -152,7 +152,7 @@ class SetupProfileController extends GetxController {
         if (profileImageUrl == null) {
           throw 'Failed to upload profile image.';
         }
-        print("Profile Image URL: $profileImageUrl");
+        // print("Profile Image URL: $profileImageUrl");
       }
 
       // Only upload if citizenshipFrontUrl is null (new image picked)
@@ -161,7 +161,7 @@ class SetupProfileController extends GetxController {
         if (citizenshipFrontUrl == null) {
           throw 'Failed to upload citizenship front image.';
         }
-        print("Front Citizenship Image URL: $citizenshipFrontUrl");
+        // print("Front Citizenship Image URL: $citizenshipFrontUrl");
       }
 
       // Only upload if citizenshipBackUrl is null (new image picked)
@@ -170,12 +170,12 @@ class SetupProfileController extends GetxController {
         if (citizenshipBackUrl == null) {
           throw 'Failed to upload citizenship back image.';
         }
-        print("Back Citizenship Image URL: $citizenshipBackUrl");
+        // print("Back Citizenship Image URL: $citizenshipBackUrl");
       }
 
-      print("All images uploaded successfully!");
+      // print("All images uploaded successfully!");
     } catch (e) {
-      print("Error uploading images: $e");
+      // print("Error uploading images: $e");
       rethrow;
     }
   }
@@ -201,7 +201,7 @@ Future<void> saveProfileToFirestore() async {
 
     Get.snackbar("Success", "Profile information saved successfully!");
   } catch (e) {
-    print("Error saving profile data: $e");
+    // print("Error saving profile data: $e");
     Get.snackbar("Error", "Failed to save profile information: $e");
   }
 }
@@ -236,7 +236,7 @@ Future<void> saveProfileToFirestore() async {
       Get.snackbar("Success", "Profile setup complete!");
     } catch (e) {
       Get.snackbar("Error", "Failed to upload profile data: $e");
-      print("Error: $e");
+      // print("Error: $e");
     }
   }
 }

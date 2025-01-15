@@ -29,19 +29,19 @@ class UserVerificationScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'User Information',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: Icon(Icons.person),
-              title: Text('Username'),
+              leading: const Icon(Icons.person),
+              title: const Text('Username'),
               subtitle: Text(userData['username'] ?? 'N/A'),
             ),
             ListTile(
-              leading: Icon(Icons.credit_card),
-              title: Text('Citizenship Number'),
+              leading: const Icon(Icons.credit_card),
+              title: const Text('Citizenship Number'),
               subtitle: Text(userData['citizenshipNumber'] ?? 'N/A'),
             ),
           ],
@@ -57,7 +57,7 @@ class UserVerificationScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Document Verification',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
@@ -94,7 +94,7 @@ class UserVerificationScreen extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         GestureDetector(
@@ -110,12 +110,12 @@ class UserVerificationScreen extends StatelessWidget {
                 ? CachedNetworkImage(
                     imageUrl: imageUrl,
                     fit: BoxFit.contain,
-                    placeholder: (context, url) => Center(
+                    placeholder: (context, url) => const Center(
                       child: CircularProgressIndicator(),
                     ),
-                    errorWidget: (context, url, error) => Icon(Icons.error),
+                    errorWidget: (context, url, error) => const Icon(Icons.error),
                   )
-                : Center(child: Text('No image available')),
+                : const Center(child: Text('No image available')),
           ),
         ),
       ],
@@ -134,7 +134,7 @@ class UserVerificationScreen extends StatelessWidget {
             InteractiveViewer(
               minScale: 0.5,
               maxScale: 4.0,
-              child: CachedNetworkImage(
+              child: CachedNetworkImage( 
                 imageUrl: imageUrl,
                 fit: BoxFit.contain,
               ),
@@ -143,7 +143,7 @@ class UserVerificationScreen extends StatelessWidget {
               top: 8,
               right: 8,
               child: IconButton(
-                icon: Icon(Icons.close, color: Colors.white),
+                icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Get.back(),
               ),
             ),
@@ -228,7 +228,7 @@ class UserVerificationScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Verification Checklist',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
@@ -236,21 +236,21 @@ class UserVerificationScreen extends StatelessWidget {
                 
                 // Verification checklist
                 CheckboxListTile(
-                  title: Text('Profile picture matches citizenship photo'),
+                  title: const Text('Profile picture matches citizenship photo'),
                   value: !hasIssues,
                   onChanged: (value) {
                     setState(() => hasIssues = !value!);
                   },
                 ),
                 CheckboxListTile(
-                  title: Text('Citizenship details are clear and legible'),
+                  title: const Text('Citizenship details are clear and legible'),
                   value: !hasIssues,
                   onChanged: (value) {
                     setState(() => hasIssues = !value!);
                   },
                 ),
                 CheckboxListTile(
-                  title: Text('Documents are not expired'),
+                  title: const Text('Documents are not expired'),
                   value: !hasIssues,
                   onChanged: (value) {
                     setState(() => hasIssues = !value!);
@@ -261,7 +261,7 @@ class UserVerificationScreen extends StatelessWidget {
                 TextField(
                   controller: notesController,
                   maxLines: 3,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Verification Notes',
                     border: OutlineInputBorder(),
                     hintText: 'Add any notes about the verification...',
@@ -284,7 +284,7 @@ class UserVerificationScreen extends StatelessWidget {
                         context,
                         notesController.text,
                       ),
-                      child: Text(
+                      child: const Text(
                         'Reject',
                         style: TextStyle(color: Colors.white),
                       ),
@@ -303,7 +303,7 @@ class UserVerificationScreen extends StatelessWidget {
                                 true,
                                 notesController.text,
                               ),
-                      child: Text(
+                      child: const Text(
                         'Approve',
                         style: TextStyle(color: Colors.white),
                       ),
@@ -361,7 +361,7 @@ class UserVerificationScreen extends StatelessWidget {
       
       Get.back();
     } catch (e) {
-      print("Error in _updateVerificationStatus: $e");
+      // print("Error in _updateVerificationStatus: $e");
       Get.snackbar(
         'Error',
         'Failed to update verification status: $e',
@@ -383,7 +383,7 @@ class UserVerificationScreen extends StatelessWidget {
         'read': false
       });
     } catch (e) {
-      print("Error adding notification: $e");
+      // print("Error adding notification: $e");
     }
   }
 
@@ -392,16 +392,16 @@ class UserVerificationScreen extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Reject Verification'),
+          title: const Text('Reject Verification'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Are you sure you want to reject this verification?',
               ),
               if (notes.isEmpty)
-                Text(
+                const Text(
                   '\nPlease add notes explaining the rejection reason.',
                   style: TextStyle(color: Colors.red),
                 ),
@@ -410,7 +410,7 @@ class UserVerificationScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: notes.isEmpty
@@ -419,7 +419,7 @@ class UserVerificationScreen extends StatelessWidget {
                       Navigator.of(context).pop();
                       _updateVerificationStatus(false, notes);
                     },
-              child: Text(
+              child: const Text(
                 'Reject',
                 style: TextStyle(color: Colors.red),
               ),
@@ -527,6 +527,8 @@ Color _getStatusColor(String status) {
   }
 }
 }
+
+
 
 //   @override
 //   Widget build(BuildContext context) {

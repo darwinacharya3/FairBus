@@ -10,7 +10,7 @@ Future<bool> isAdmin() async {
   try {
     User? currentUser = _auth.currentUser;
     if (currentUser == null) {
-      print('No current user found');
+      // print('No current user found');
       return false;
     }
 
@@ -22,10 +22,10 @@ Future<bool> isAdmin() async {
     bool isAdmin = userDoc.exists && 
         (userDoc.data() as Map<String, dynamic>)['isAdmin'] == true;
     
-    print('Admin check result: $isAdmin for user ${currentUser.uid}');
+    // print('Admin check result: $isAdmin for user ${currentUser.uid}');
     return isAdmin;
   } catch (e) {
-    print('Error checking admin status: $e');
+    // print('Error checking admin status: $e');
     return false;
   }
 }
