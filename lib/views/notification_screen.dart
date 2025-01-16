@@ -142,12 +142,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
               .snapshots(),
           builder: (context, snapshot) {
             // Add debugging logs
-            print('Connection state: ${snapshot.connectionState}');
-            print('Has error: ${snapshot.hasError}');
-            if (snapshot.hasError) print('Error: ${snapshot.error}');
-            if (snapshot.hasData) {
-              print('Number of notifications: ${snapshot.data?.docs.length}');
-            }
+            // print('Connection state: ${snapshot.connectionState}');
+            // print('Has error: ${snapshot.hasError}');
+            // if (snapshot.hasError) print('Error: ${snapshot.error}');
+            // if (snapshot.hasData) {
+              // print('Number of notifications: ${snapshot.data?.docs.length}');
+            // }
 
             if (snapshot.hasError) {
               return Center(
