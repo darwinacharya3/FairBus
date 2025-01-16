@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 
 class UserProfileSection extends StatefulWidget {
-  const UserProfileSection({Key? key}) : super(key: key);
+  const UserProfileSection({super.key});
 
   @override
   State<UserProfileSection> createState() => _UserProfileSectionState();
@@ -68,110 +68,110 @@ class _UserProfileSectionState extends State<UserProfileSection> {
         }
       }
     } catch (e) {
-      Get.snackbar("Error", "Failed to upload profile picture: ${e.toString()}");
+      Get.snackbar(
+          "Error", "Failed to upload profile picture: ${e.toString()}");
     }
   }
-@override
-Widget build(BuildContext context) {
-  return Container(
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: const Color(0xFFF5F5F5), // Light gray background
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: const Color(0xFF4CAF50), // Green border color
-        width: 1.5,
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5), // Light gray background
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF4CAF50), // Green border color
+          width: 1.5,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black12,
-          blurRadius: 10,
-          offset: Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Row(
-      children: [
-        // Profile Picture with Edit Icon
-        Stack(
-          children: [
-            CircleAvatar(
-              radius: 40,
-              backgroundImage: _profileImage != null
-                  ? FileImage(_profileImage!)
-                  : (_profileImageUrl.isNotEmpty
-                      ? NetworkImage(_profileImageUrl)
-                      : const AssetImage('assets/avatar_placeholder.png'))
-                          as ImageProvider,
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: _uploadProfileImage,
-                child: const CircleAvatar(
-                  radius: 14,
-                  backgroundColor: Colors.green,
-                  child:Icon(
-                    Icons.camera_alt,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(width: 16),
-        // User Details and Balance
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        children: [
+          // Profile Picture with Edit Icon
+          Stack(
             children: [
-              Text(
-                _greetingText,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+              CircleAvatar(
+                radius: 40,
+                backgroundImage: _profileImage != null
+                    ? FileImage(_profileImage!)
+                    : (_profileImageUrl.isNotEmpty
+                            ? NetworkImage(_profileImageUrl)
+                            : const AssetImage('assets/avatar_placeholder.png'))
+                        as ImageProvider,
               ),
-              const SizedBox(height: 4),
-              Text(
-                "Balance: NPR 500",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.grey[600],
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: _uploadProfileImage,
+                  child: const CircleAvatar(
+                    radius: 14,
+                    backgroundColor: Colors.green,
+                    child: Icon(
+                      Icons.camera_alt,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-        // Edit Profile Button
-        ElevatedButton.icon(
-          onPressed: () {
-            debugPrint("Edit Profile clicked.");
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4CAF50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+          const SizedBox(width: 16),
+          // User Details and Balance
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _greetingText,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "Balance: NPR 500",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
-          icon: const Icon(Icons.edit, size: 18),
-          label: Text(
-            "Edit",
-            style: GoogleFonts.poppins(fontSize: 14),
+          // Edit Profile Button
+          ElevatedButton.icon(
+            onPressed: () {
+              debugPrint("Edit Profile clicked.");
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            icon: const Icon(Icons.edit, size: 18),
+            label: Text(
+              "Edit",
+              style: GoogleFonts.poppins(fontSize: 14),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
-  
+        ],
+      ),
+    );
+  }
 }
 
 

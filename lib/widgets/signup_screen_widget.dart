@@ -6,7 +6,7 @@ import 'package:major_project/utils/app_colors.dart';
 import 'package:major_project/controller/auth_controller.dart';
 
 class SignupScreenWidget extends StatefulWidget {
-  const SignupScreenWidget({Key? key}) : super(key: key);
+  const SignupScreenWidget({super.key});
 
   @override
   State<SignupScreenWidget> createState() => _SignupScreenWidgetState();
@@ -116,13 +116,12 @@ class _SignupScreenWidgetState extends State<SignupScreenWidget> {
                   ],
                 ),
                 const SizedBox(height: 15),
-                _buildTextField("Email", "Enter your email", Icons.email,
-                    _emailController,
+                _buildTextField(
+                    "Email", "Enter your email", Icons.email, _emailController,
                     keyboardType: TextInputType.emailAddress),
                 const SizedBox(height: 15),
-                _buildTextField(
-                    "Username", "Choose a username", Icons.person_outline,
-                    _usernameController),
+                _buildTextField("Username", "Choose a username",
+                    Icons.person_outline, _usernameController),
                 const SizedBox(height: 15),
                 _buildTextField(
                   "Password",

@@ -6,7 +6,7 @@ import 'package:major_project/controller/auth_controller.dart';
 // import 'package:major_project/views/otp_verification_screen.dart';
 
 class ForgetPasswordWidget extends StatefulWidget {
-  const ForgetPasswordWidget({Key? key}) : super(key: key);
+  const ForgetPasswordWidget({super.key});
 
   @override
   State<ForgetPasswordWidget> createState() => _ForgetPasswordWidgetState();
@@ -19,27 +19,35 @@ class _ForgetPasswordWidgetState extends State<ForgetPasswordWidget> {
   void _sendOtp() async {
     String email = _emailController.text.trim();
 
-    final emailRegex = RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+    final emailRegex =
+        RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
 
     if (email.isEmpty) {
       Get.snackbar("Error", "Email cannot be empty!",
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
       return;
     }
 
     if (!emailRegex.hasMatch(email)) {
       Get.snackbar("Error", "Enter a valid email address!",
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
       return;
     }
 
     bool isEmailRegistered = await _authController.checkEmailRegistered(email);
     if (isEmailRegistered) {
       _authController.sendOtpToEmail(email);
-      Get.toNamed('/otpVerification', arguments: {'email': email}); // Navigate to OTP verification screen
+      Get.toNamed('/otpVerification',
+          arguments: {'email': email}); // Navigate to OTP verification screen
     } else {
       Get.snackbar("Error", "Email Id is not registered",
-          snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white);
     }
     // Get.to(()=>const OtpVerificationScreen());
   }
@@ -105,13 +113,14 @@ class _ForgetPasswordWidgetState extends State<ForgetPasswordWidget> {
                   onPressed: _sendOtp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.greenColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                   child: const Text(
                     "Next",
                     style: TextStyle(fontSize: 18, color: Colors.white),
-                    
                   ),
                 ),
               ],
@@ -138,18 +147,10 @@ class _ForgetPasswordWidgetState extends State<ForgetPasswordWidget> {
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColors.greenColor),
+          borderSide: const BorderSide(color: AppColors.greenColor),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
     );
   }
 }
-
-
-
-
-
-
-
-

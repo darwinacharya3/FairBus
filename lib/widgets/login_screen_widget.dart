@@ -6,7 +6,7 @@ import 'package:major_project/controller/auth_controller.dart';
 import 'package:major_project/views/forget_password_screen.dart';
 
 class LoginScreenWidget extends StatefulWidget {
-  const LoginScreenWidget({Key? key}) : super(key: key);
+  const LoginScreenWidget({super.key});
 
   @override
   State<LoginScreenWidget> createState() => _LoginScreenWidgetState();
@@ -245,7 +245,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
         ),
         counterText: "", // Hides the max length counter
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: AppColors.greenColor),
+          borderSide: const BorderSide(color: AppColors.greenColor),
           borderRadius: BorderRadius.circular(10),
         ),
       ),

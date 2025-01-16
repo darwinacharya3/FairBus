@@ -10,9 +10,11 @@ class BusRoutesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        double availableHeight = constraints.maxHeight * 0.7; // Adjust height to 70% of the parent
+        double availableHeight =
+            constraints.maxHeight * 0.7; // Adjust height to 70% of the parent
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Add consistent padding
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16.0, vertical: 12.0), // Add consistent padding
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min, // Adjust height dynamically
@@ -32,19 +34,25 @@ class BusRoutesSection extends StatelessWidget {
                   // Navigate to the full map screen
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => FullMapScreen()),
+                    MaterialPageRoute(
+                        builder: (context) => const FullMapScreen()),
                   );
                 },
                 child: Stack(
                   children: [
                     // Map Preview Container
                     Container(
-                      height: availableHeight, // Use dynamically calculated height
-                      width: double.infinity, // Make it stretch across the screen
+                      height:
+                          availableHeight, // Use dynamically calculated height
+                      width:
+                          double.infinity, // Make it stretch across the screen
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         gradient: LinearGradient(
-                          colors: [Colors.blueAccent.withOpacity(0.7), Colors.lightBlue.withOpacity(0.7)],
+                          colors: [
+                            Colors.blueAccent.withOpacity(0.7),
+                            Colors.lightBlue.withOpacity(0.7)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -60,14 +68,21 @@ class BusRoutesSection extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         child: FlutterMap(
                           options: const MapOptions(
-                            initialCenter: LatLng(27.7172, 85.3240), // Center on Kathmandu
+                            initialCenter:
+                                LatLng(27.7172, 85.3240), // Center on Kathmandu
                             initialZoom: 13, // Default zoom level
                           ),
                           children: [
                             TileLayer(
-                              urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                              subdomains: const ['a', 'b', 'c'], // Subdomains for OSM
-                              userAgentPackageName: 'com.example.app', // Replace with your app's package name
+                              urlTemplate:
+                                  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                              subdomains: const [
+                                'a',
+                                'b',
+                                'c'
+                              ], // Subdomains for OSM
+                              userAgentPackageName:
+                                  'com.example.app', // Replace with your app's package name
                             ),
                           ],
                         ),
@@ -78,7 +93,8 @@ class BusRoutesSection extends StatelessWidget {
                       child: Container(
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.4), // Semi-transparent overlay
+                          color: Colors.black
+                              .withOpacity(0.4), // Semi-transparent overlay
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Column(

@@ -38,7 +38,7 @@ class HomeScreen extends StatelessWidget {
               // Map Section (40%)
               SizedBox(
                 height: mapSectionHeight,
-                child: BusRoutesSection(),
+                child: const BusRoutesSection(),
               ),
             ],
           );
@@ -47,8 +47,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
-
-
-
-

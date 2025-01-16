@@ -6,7 +6,7 @@ import 'package:major_project/widgets/login_screen_widget.dart';
 import 'package:major_project/utils/app_colors.dart';
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

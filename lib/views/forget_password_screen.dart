@@ -38,16 +38,13 @@
 //   }
 // }
 
-
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:major_project/utils/app_colors.dart';
 import 'package:major_project/widgets/forget_password_widget.dart';
 
 class ForgetPasswordScreen extends StatelessWidget {
-  const ForgetPasswordScreen({Key? key}) : super(key: key);
+  const ForgetPasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +58,7 @@ class ForgetPasswordScreen extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
       ),
-      body: const  ForgetPasswordWidget(),
+      body: const ForgetPasswordWidget(),
     );
   }
 }
