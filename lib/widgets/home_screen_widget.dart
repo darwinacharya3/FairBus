@@ -64,7 +64,7 @@ class HomeScreenWidget extends StatelessWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.notifications),
           onPressed: () {
             // Handle notifications click
-            print("Notification Icon clicked");
+            // print("Notification Icon clicked");
           },
         ),
       ],
@@ -81,7 +81,7 @@ class HomeScreenWidget extends StatelessWidget implements PreferredSizeWidget {
       // Navigate to the login screen after logout
       Get.offAll(() => const LoginScreen());  // Replace with your actual login screen
     } catch (e) {
-      print("Error logging out: $e");
+      // print("Error logging out: $e");
       // Optionally show an error dialog or message
     }
   }

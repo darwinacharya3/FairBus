@@ -32,11 +32,11 @@ class CloudinaryHelper {
         final responseData = jsonDecode(responseBody);
         return responseData['secure_url']; // Return the secure image URL
       } else {
-        print('Failed to upload image: ${response.statusCode}');
+        // print('Failed to upload image: ${response.statusCode}');
         return null;
       }
     } catch (e) {
-      print('Error uploading image to Cloudinary: $e');
+      // print('Error uploading image to Cloudinary: $e');
       return null;
     }
   }
