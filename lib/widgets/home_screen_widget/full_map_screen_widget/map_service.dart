@@ -92,50 +92,79 @@ extension NavigationMapService on MapService {
       throw Exception("No route found");
     }
 
-    final steps = data['routes'][0]['legs'][0]['steps'] as List;
-    return steps.map((step) {
+    final List<dynamic> steps = data['routes'][0]['legs'][0]['steps'];
+    List<NavigationInstruction> instructions = [];
+    
+    for (int i = 0; i < steps.length; i++) {
+      final step = steps[i];
+      final maneuver = step['maneuver'];
       final location = LatLng(
-        step['maneuver']['location'][1],
-        step['maneuver']['location'][0],
+        maneuver['location'][1].toDouble(),
+        maneuver['location'][0].toDouble(),
       );
 
-      return NavigationInstruction(
-        turnType: _parseTurnType(step['maneuver']['type']),
-        instruction: step['maneuver']['instruction'] ?? 'Continue straight',
+      // Get the next maneuver point for better instruction timing
+      LatLng? nextLocation;
+      if (i < steps.length - 1) {
+        nextLocation = LatLng(
+          steps[i + 1]['maneuver']['location'][1].toDouble(),
+          steps[i + 1]['maneuver']['location'][0].toDouble(),
+        );
+      }
+
+      String instruction = _generateInstruction(step, maneuver);
+      
+      instructions.add(NavigationInstruction(
+        turnType: _parseTurnType(maneuver['type'], maneuver['modifier']),
+        instruction: instruction,
         distance: step['distance'].toDouble(),
         duration: step['duration'].toDouble(),
         location: location,
-        bearing: step['maneuver']['bearing_after'].toDouble(),
-      );
-    }).toList();
+        bearing: maneuver['bearing_after'].toDouble(),
+      ));
+    }
+
+    return instructions;
   }
 
-  TurnType _parseTurnType(String type) {
-    switch (type) {
+  String _generateInstruction(dynamic step, dynamic maneuver) {
+    String baseInstruction = step['name'] != ""
+        ? "Continue onto ${step['name']}"
+        : "Continue straight";
+
+    switch (maneuver['type']) {
       case 'turn':
-        return TurnType.right;
-      case 'new name':
-        return TurnType.straight;
-      case 'depart':
-        return TurnType.straight;
-      case 'arrive':
-        return TurnType.finish;
+        return "Turn ${maneuver['modifier']} onto ${step['name']}";
       case 'roundabout':
-        return TurnType.roundabout;
-      case 'merge':
+        return "Enter roundabout and take exit ${maneuver['exit']}";
+      case 'arrive':
+        return "Arrive at destination";
+      default:
+        return baseInstruction;
+    }
+  }
+
+  TurnType _parseTurnType(String type, String? modifier) {
+    if (type == 'arrive') return TurnType.finish;
+    if (type == 'roundabout') return TurnType.roundabout;
+
+    switch (modifier) {
+      case 'straight':
+        return TurnType.straight;
+      case 'slight right':
         return TurnType.slightRight;
-      case 'on ramp':
-        return TurnType.slightRight;
-      case 'off ramp':
-        return TurnType.slightRight;
-      case 'fork':
-        return TurnType.slightRight;
-      case 'end of road':
+      case 'right':
         return TurnType.right;
-      case 'use lane':
-        return TurnType.straight;
-      case 'continue':
-        return TurnType.straight;
+      case 'sharp right':
+        return TurnType.sharpRight;
+      case 'slight left':
+        return TurnType.slightLeft;
+      case 'left':
+        return TurnType.left;
+      case 'sharp left':
+        return TurnType.sharpLeft;
+      case 'uturn':
+        return TurnType.uTurn;
       default:
         return TurnType.straight;
     }

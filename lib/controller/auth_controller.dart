@@ -32,6 +32,10 @@ class AuthController extends GetxController {
         'username': username,
         'password' : password,
         'accepted_terms': true,
+        'balance': 0.00,          // NEW: Initial balance
+        'distance': 0.0,          // NEW: Total distance
+        'isOnBus': false,         // NEW: Tap status
+        'isVerified': false,      // NEW: Verification status
         'created_at': FieldValue.serverTimestamp(),
       });
 
@@ -39,6 +43,19 @@ class AuthController extends GetxController {
       Get.toNamed('/login');
     } catch (e) {
       Get.snackbar("Error", "Failed to register user: ${e.toString()}");
+    }
+  }
+
+   // NEW: Add method to update fare/distance after ride
+  Future<void> updateUserAfterRide(String uid, double fare, double distance) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'balance': FieldValue.increment(-fare),
+        'distance': FieldValue.increment(distance),
+        'isOnBus': false,
+      });
+    } catch (e) {
+      Get.snackbar("Error", "Failed to update ride data: ${e.toString()}");
     }
   }
 

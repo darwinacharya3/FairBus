@@ -8,10 +8,6 @@ import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/
 import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/bus_stop.dart';
 import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/navigation_service.dart';
 import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/voice_guidance_service.dart';
-import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/navigation_overlay.dart';
-import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/navigation_instruction.dart';
-// New imports for navigation features
-
 
 class FullMapScreen extends StatefulWidget {
   const FullMapScreen({super.key});
@@ -21,31 +17,35 @@ class FullMapScreen extends StatefulWidget {
 }
 
 class _FullMapScreenState extends State<FullMapScreen> {
-  // Existing controllers
+  // Controllers and Services
   final PopupController _popupController = PopupController();
   final MapController _mapController = MapController();
   final LocationService _locationService = LocationService();
   final MapService _mapService = MapService();
-  
-  // New controllers for navigation
   final NavigationService _navigationService = NavigationService();
   final VoiceGuidanceService _voiceGuidanceService = VoiceGuidanceService();
-  StreamSubscription? _navigationSubscription;
-  NavigationInstruction? _currentInstruction;
   
-  // Existing state variables
+  // Stream Subscriptions
+  StreamSubscription? _navigationSubscription;
+  StreamSubscription? _routeProgressSubscription;
+  StreamSubscription? _locationSubscription;
+  
+  // Navigation State
+  NavigationInstruction? _currentInstruction;
+  double _routeProgress = 0.0;
+  bool _isNavigating = false;
+  bool _isMuted = false;
+   List<LatLng> _routePoints = []; 
+  
+  // Map State
   String _selectedLayer = "Default";
   LatLng? _userLocation;
   final TextEditingController _startController = TextEditingController();
   final TextEditingController _endController = TextEditingController();
-  List<LatLng> _routeCoordinates = [];
   double _currentZoom = 14.0;
   bool _isLoadingRoute = false;
   String _routeError = '';
-
-  // New state variables for navigation
-  bool _isNavigating = false;
-  bool _isMuted = false;
+  
 
   @override
   void initState() {
@@ -58,28 +58,60 @@ class _FullMapScreenState extends State<FullMapScreen> {
     _navigationSubscription = _navigationService.navigationStream.listen((instruction) {
       setState(() => _currentInstruction = instruction);
       if (!_isMuted) {
-        _voiceGuidanceService.speak(instruction);
+        // _voiceGuidanceService.speak(instruction.mainInstruction);
       }
+    });
+
+    _routeProgressSubscription = _navigationService.routeProgressStream.listen((progress) {
+      setState(() => _routeProgress = progress);
     });
   }
 
-  Future<void> _initializeLocationTracking() async {
+   Future<void> _initializeLocationTracking() async {
     if (await _locationService.checkAndRequestPermissions()) {
       final location = await _locationService.getCurrentLocation();
       setState(() => _userLocation = location);
 
-      _locationService.getLocationStream().listen((location) {
+      _locationSubscription = _locationService.getLocationStream().listen((location) {
         _handleLocationUpdate(location);
       });
     }
   }
 
-  void _handleLocationUpdate(LatLng location) {
+    void _handleLocationUpdate(LatLng location) {
     setState(() => _userLocation = location);
     if (_isNavigating) {
       _navigationService.updateUserLocation(location);
     }
+    
+    if (_isNavigating && _mapController.camera.zoom > 15) {
+      _mapController.move(location, _mapController.camera.zoom);
+    }
   }
+
+  void _fitRouteOnMap() {
+    if (_routePoints.isNotEmpty) {
+      final bounds = LatLngBounds.fromPoints(_routePoints);
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(50.0),
+        ),
+      );
+    }
+}
+
+  //   void _fitRouteOnMap() {
+  //   if (_routePoints.isNotEmpty) {
+  //     final bounds = LatLngBounds.fromPoints(_routePoints);
+  //     _mapController.fitBounds(
+  //       bounds,
+  //       options: const FitBoundsOptions(
+  //         padding: EdgeInsets.all(50.0),
+  //       ),
+  //     );
+  //   }
+  // }
 
   Future<void> _fetchRoute() async {
     if (_startController.text.isEmpty || _endController.text.isEmpty) {
@@ -92,7 +124,7 @@ class _FullMapScreenState extends State<FullMapScreen> {
     setState(() {
       _isLoadingRoute = true;
       _routeError = '';
-      _routeCoordinates = [];
+      _routePoints = []; // Clear existing route
     });
 
     try {
@@ -106,22 +138,22 @@ class _FullMapScreenState extends State<FullMapScreen> {
         throw Exception("Could not find end location");
       }
 
-      final routePoints = await _mapService.fetchRoute(startLocation, endLocation);
-      final bounds = _mapService.calculateRouteBounds(routePoints);
-
-      // Get navigation instructions
-      final instructions = await _mapService.getNavigationInstructions(
-        startLocation,
-        endLocation,
-      );
-
+      // Get route data including points
+      final routeData = await _navigationService.getRouteData(startLocation, endLocation);
       setState(() {
-        _routeCoordinates = routePoints;
-        _mapController.move(bounds.center, bounds.zoom);
-        _isNavigating = true;
+        _routePoints = routeData.points;
       });
 
-      _navigationService.startNavigation(instructions);
+      // Start navigation
+      await _navigationService.startNavigation(startLocation, endLocation);
+      
+      // Center map to show the entire route
+      _fitRouteOnMap();
+      
+      setState(() {
+        _isNavigating = true;
+        _currentZoom = 15.0;
+      });
 
     } catch (e) {
       setState(() => _routeError = e.toString());
@@ -133,7 +165,126 @@ class _FullMapScreenState extends State<FullMapScreen> {
     }
   }
 
-  @override
+  //  Future<void> _fetchRoute() async {
+  //   if (_startController.text.isEmpty || _endController.text.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("Please enter both start and end points.")),
+  //     );
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     _isLoadingRoute = true;
+  //     _routeError = '';
+  //     _routePoints = []; // Clear existing route
+  //   });
+
+  //   try {
+  //     final startLocation = await _locationService.getCoordinatesFromLocation(_startController.text);
+  //     if (startLocation == null) {
+  //       throw Exception("Could not find start location");
+  //     }
+
+  //     final endLocation = await _locationService.getCoordinatesFromLocation(_endController.text);
+  //     if (endLocation == null) {
+  //       throw Exception("Could not find end location");
+  //     }
+
+  //     // Get route data including points
+  //     final routeData = await _navigationService.getRouteData(startLocation, endLocation);
+  //     setState(() {
+  //       _routePoints = routeData.points;
+  //     });
+
+  //     // Start navigation
+  //     await _navigationService.startNavigation(startLocation, endLocation);
+      
+  //     // Center map to show the entire route
+  //     _fitRouteOnMap();
+      
+  //     setState(() {
+  //       _isNavigating = true;
+  //       _currentZoom = 15.0;
+  //     });
+
+  //   } catch (e) {
+  //     setState(() => _routeError = e.toString());
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error: ${e.toString()}")),
+  //     );
+  //   } finally {
+  //     setState(() => _isLoadingRoute = false);
+  //   }
+  // }
+
+
+
+
+  // Future<void> _fetchRoute() async {
+  //   if (_startController.text.isEmpty || _endController.text.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("Please enter both start and end points.")),
+  //     );
+  //     return;
+  //   }
+
+  //   setState(() {
+  //     _isLoadingRoute = true;
+  //     _routeError = '';
+  //   });
+
+  //   try {
+  //     final startLocation = await _locationService.getCoordinatesFromLocation(_startController.text);
+  //     if (startLocation == null) {
+  //       throw Exception("Could not find start location");
+  //     }
+
+  //     final endLocation = await _locationService.getCoordinatesFromLocation(_endController.text);
+  //     if (endLocation == null) {
+  //       throw Exception("Could not find end location");
+  //     }
+
+  //     // Start navigation
+  //     await _navigationService.startNavigation(startLocation, endLocation);
+      
+  //     // Center map on start location
+  //     _mapController.move(startLocation, 15.0);
+      
+  //     setState(() {
+  //       _isNavigating = true;
+  //       _currentZoom = 15.0;
+  //     });
+
+  //   } catch (e) {
+  //     setState(() => _routeError = e.toString());
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error: ${e.toString()}")),
+  //     );
+  //   } finally {
+  //     setState(() => _isLoadingRoute = false);
+  //   }
+  // }
+
+  // void _stopNavigation() {
+  //   setState(() {
+  //     _isNavigating = false;
+  //     _currentInstruction = null;
+  //     _routeProgress = 0.0;
+  //   });
+  //   _navigationService.stopNavigation();
+  // }
+
+   void _stopNavigation() {
+    setState(() {
+      _isNavigating = false;
+      _currentInstruction = null;
+      _routeProgress = 0.0;
+      _routePoints = []; // Clear the route line
+    });
+    _navigationService.stopNavigation();
+  }
+
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -155,21 +306,26 @@ class _FullMapScreenState extends State<FullMapScreen> {
               },
             ),
             children: [
+              // Base Map Layer
               TileLayer(
                 urlTemplate: MapService.mapLayerOptions[_selectedLayer]!,
                 subdomains: const ['a', 'b', 'c'],
                 userAgentPackageName: 'com.example.app',
               ),
-              if (_routeCoordinates.isNotEmpty)
+              
+              // Route Polyline Layer
+              if (_routePoints.isNotEmpty)
                 PolylineLayer(
                   polylines: [
                     Polyline(
-                      points: _routeCoordinates,
-                      strokeWidth: 4.0,
+                      points: _routePoints,
                       color: Colors.blue,
+                      strokeWidth: 4.0,
                     ),
                   ],
                 ),
+              
+              // Bus Stop Markers
               PopupMarkerLayer(
                 options: PopupMarkerLayerOptions(
                   markers: BusStopData.stops.map((stop) {
@@ -187,33 +343,12 @@ class _FullMapScreenState extends State<FullMapScreen> {
                   popupController: _popupController,
                   markerTapBehavior: MarkerTapBehavior.togglePopup(),
                   popupDisplayOptions: PopupDisplayOptions(
-                    builder: (context, marker) {
-                      final stop = BusStopData.stops.firstWhere(
-                        (s) => s.location == marker.point,
-                      );
-                      return Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                stop.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16.0,
-                                ),
-                              ),
-                              const SizedBox(height: 8.0),
-                              const Text('Additional details about this stop'),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                    builder: (context, marker) => _buildBusStopPopup(marker),
                   ),
                 ),
               ),
+              
+              // User Location Marker
               if (_userLocation != null)
                 MarkerLayer(
                   markers: [
@@ -231,30 +366,124 @@ class _FullMapScreenState extends State<FullMapScreen> {
                 ),
             ],
           ),
+          
+          // Rest of the existing UI components
           _buildLayerSelector(),
           _buildRouteInputs(),
-          // New navigation overlay
           if (_isNavigating && _currentInstruction != null)
-            Positioned(
-              top: 100,
-              left: 0,
-              right: 0,
-              child: NavigationOverlay(
-                instruction: _currentInstruction!,
-                isMuted: _isMuted,
-                onMuteToggle: () {
-                  setState(() => _isMuted = !_isMuted);
-                  _voiceGuidanceService.toggleMute();
-                },
-                onClose: () {
-                  setState(() {
-                    _isNavigating = false;
-                    _currentInstruction = null;
-                  });
-                },
+            _buildNavigationOverlay(),
+        ],
+      ),
+    );
+  }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       title: const Text('Bus Route Map'),
+  //       centerTitle: true,
+  //       backgroundColor: Colors.green,
+  //     ),
+  //     body: Stack(
+  //       children: [
+  //         FlutterMap(
+  //           mapController: _mapController,
+  //           options: MapOptions(
+  //             initialCenter: _userLocation ?? const LatLng(27.7172, 85.3240),
+  //             initialZoom: _currentZoom,
+  //             onPositionChanged: (position, hasGesture) {
+  //               if (hasGesture) {
+  //                 setState(() => _currentZoom = position.zoom ?? _currentZoom);
+  //               }
+  //             },
+  //           ),
+  //           children: [
+  //             // Base Map Layer
+  //             TileLayer(
+  //               urlTemplate: MapService.mapLayerOptions[_selectedLayer]!,
+  //               subdomains: const ['a', 'b', 'c'],
+  //               userAgentPackageName: 'com.example.app',
+  //             ),
+              
+  //             // Bus Stop Markers
+  //             PopupMarkerLayer(
+  //               options: PopupMarkerLayerOptions(
+  //                 markers: BusStopData.stops.map((stop) {
+  //                   return Marker(
+  //                     width: 80.0,
+  //                     height: 80.0,
+  //                     point: stop.location,
+  //                     child: const Icon(
+  //                       Icons.location_on,
+  //                       color: Colors.red,
+  //                       size: 30.0,
+  //                     ),
+  //                   );
+  //                 }).toList(),
+  //                 popupController: _popupController,
+  //                 markerTapBehavior: MarkerTapBehavior.togglePopup(),
+  //                 popupDisplayOptions: PopupDisplayOptions(
+  //                   builder: (context, marker) => _buildBusStopPopup(marker),
+  //                 ),
+  //               ),
+  //             ),
+              
+  //             // User Location Marker
+  //             if (_userLocation != null)
+  //               MarkerLayer(
+  //                 markers: [
+  //                   Marker(
+  //                     width: 40.0,
+  //                     height: 40.0,
+  //                     point: _userLocation!,
+  //                     child: const Icon(
+  //                       Icons.person_pin_circle,
+  //                       color: Colors.blue,
+  //                       size: 40.0,
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //           ],
+  //         ),
+          
+  //         // Layer Selector
+  //         _buildLayerSelector(),
+          
+  //         // Route Inputs
+  //         _buildRouteInputs(),
+          
+  //         // Navigation Overlay
+  //         if (_isNavigating && _currentInstruction != null)
+  //           _buildNavigationOverlay(),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildBusStopPopup(Marker marker) {
+    final stop = BusStopData.stops.firstWhere(
+      (s) => s.location == marker.point,
+    );
+    
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              stop.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16.0,
               ),
             ),
-        ],
+            const SizedBox(height: 8.0),
+            const Text('Additional details about this stop'),
+          ],
+        ),
       ),
     );
   }
@@ -265,22 +494,27 @@ class _FullMapScreenState extends State<FullMapScreen> {
       right: 20,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.green.shade100,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: DropdownButton<String>(
           value: _selectedLayer,
           onChanged: (value) => setState(() => _selectedLayer = value!),
           items: MapService.mapLayerOptions.keys.map((layer) {
             return DropdownMenuItem<String>(
               value: layer,
-              child: Text(
-                layer,
-                style: const TextStyle(color: Colors.black),
-              ),
+              child: Text(layer),
             );
           }).toList(),
-          dropdownColor: Colors.green.shade100,
           underline: Container(),
         ),
       ),
@@ -304,6 +538,7 @@ class _FullMapScreenState extends State<FullMapScreen> {
                 decoration: const InputDecoration(
                   labelText: "Start Location",
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
                 ),
               ),
               const SizedBox(height: 8.0),
@@ -312,14 +547,26 @@ class _FullMapScreenState extends State<FullMapScreen> {
                 decoration: const InputDecoration(
                   labelText: "End Location",
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
                 ),
               ),
               const SizedBox(height: 8.0),
-              ElevatedButton(
-                onPressed: _isLoadingRoute ? null : _fetchRoute,
-                child: _isLoadingRoute
-                    ? const CircularProgressIndicator()
-                    : const Text("Find Route"),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoadingRoute ? null : _fetchRoute,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  ),
+                  child: _isLoadingRoute
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(color: Colors.white),
+                        )
+                      : const Text("Find Route"),
+                ),
               ),
               if (_routeError.isNotEmpty)
                 Padding(
@@ -336,14 +583,488 @@ class _FullMapScreenState extends State<FullMapScreen> {
     );
   }
 
+  Widget _buildNavigationOverlay() {
+    return Positioned(
+      top: 100,
+      left: 16,
+      right: 16,
+      child: Card(
+        elevation: 4,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      _currentInstruction!.mainInstruction,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(_isMuted ? Icons.volume_off : Icons.volume_up),
+                        onPressed: () {
+                          setState(() => _isMuted = !_isMuted);
+                          _voiceGuidanceService.toggleMute();
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: _stopNavigation,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (_currentInstruction!.secondaryInstruction.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _currentInstruction!.secondaryInstruction,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Distance: ${_currentInstruction!.formattedDistance}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  Text(
+                    'ETA: ${_currentInstruction!.formattedDuration}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_currentInstruction!.nextInstruction.isNotEmpty) ...[
+                const Divider(),
+                Text(
+                  'Next: ${_currentInstruction!.nextInstruction}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: _routeProgress / 100,
+                backgroundColor: Colors.grey[200],
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _navigationSubscription?.cancel();
+    _routeProgressSubscription?.cancel();
+    _locationSubscription?.cancel();
     _navigationService.dispose();
     _voiceGuidanceService.dispose();
+    _startController.dispose();
+    _endController.dispose();
     super.dispose();
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'dart:async';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_map/flutter_map.dart';
+// import 'package:flutter_map_marker_popup/flutter_map_marker_popup.dart';
+// import 'package:latlong2/latlong.dart';
+// import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/location_service.dart';
+// import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/map_service.dart';
+// import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/bus_stop.dart';
+// import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/navigation_service.dart';
+// import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/voice_guidance_service.dart';
+// import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/navigation_overlay.dart';
+// import 'package:major_project/widgets/home_screen_widget/full_map_screen_widget/navigation_instruction.dart';
+// // New imports for navigation features
+
+
+// class FullMapScreen extends StatefulWidget {
+//   const FullMapScreen({super.key});
+
+//   @override
+//   State<FullMapScreen> createState() => _FullMapScreenState();
+// }
+
+// class _FullMapScreenState extends State<FullMapScreen> {
+//   // Existing controllers
+//   final PopupController _popupController = PopupController();
+//   final MapController _mapController = MapController();
+//   final LocationService _locationService = LocationService();
+//   final MapService _mapService = MapService();
+  
+//   // New controllers for navigation
+//   final NavigationService _navigationService = NavigationService();
+//   final VoiceGuidanceService _voiceGuidanceService = VoiceGuidanceService();
+//   StreamSubscription? _navigationSubscription;
+//   NavigationInstruction? _currentInstruction;
+  
+//   // Existing state variables
+//   String _selectedLayer = "Default";
+//   LatLng? _userLocation;
+//   final TextEditingController _startController = TextEditingController();
+//   final TextEditingController _endController = TextEditingController();
+//   List<LatLng> _routeCoordinates = [];
+//   double _currentZoom = 14.0;
+//   bool _isLoadingRoute = false;
+//   String _routeError = '';
+
+//   // New state variables for navigation
+//   bool _isNavigating = false;
+//   bool _isMuted = false;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _initializeLocationTracking();
+//     _initializeNavigation();
+//   }
+
+//   void _initializeNavigation() {
+//     _navigationSubscription = _navigationService.navigationStream.listen((instruction) {
+//       setState(() => _currentInstruction = instruction);
+//       if (!_isMuted) {
+//         _voiceGuidanceService.speak(instruction);
+//       }
+//     });
+//   }
+
+//   Future<void> _initializeLocationTracking() async {
+//     if (await _locationService.checkAndRequestPermissions()) {
+//       final location = await _locationService.getCurrentLocation();
+//       setState(() => _userLocation = location);
+
+//       _locationService.getLocationStream().listen((location) {
+//         _handleLocationUpdate(location);
+//       });
+//     }
+//   }
+
+//   void _handleLocationUpdate(LatLng location) {
+//     setState(() => _userLocation = location);
+//     if (_isNavigating) {
+//       _navigationService.updateUserLocation(location);
+//     }
+//   }
+
+//   Future<void> _fetchRoute() async {
+//     if (_startController.text.isEmpty || _endController.text.isEmpty) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(content: Text("Please enter both start and end points.")),
+//       );
+//       return;
+//     }
+
+//     setState(() {
+//       _isLoadingRoute = true;
+//       _routeError = '';
+//       _routeCoordinates = [];
+//     });
+
+//     try {
+//       final startLocation = await _locationService.getCoordinatesFromLocation(_startController.text);
+//       if (startLocation == null) {
+//         throw Exception("Could not find start location");
+//       }
+
+//       final endLocation = await _locationService.getCoordinatesFromLocation(_endController.text);
+//       if (endLocation == null) {
+//         throw Exception("Could not find end location");
+//       }
+
+//       final routePoints = await _mapService.fetchRoute(startLocation, endLocation);
+//       final bounds = _mapService.calculateRouteBounds(routePoints);
+
+//       // Get navigation instructions
+//       final instructions = await _mapService.getNavigationInstructions(
+//         startLocation,
+//         endLocation,
+//       );
+
+//       setState(() {
+//         _routeCoordinates = routePoints;
+//         _mapController.move(bounds.center, bounds.zoom);
+//         _isNavigating = true;
+//       });
+
+//       _navigationService.startNavigation(instructions);
+
+//     } catch (e) {
+//       setState(() => _routeError = e.toString());
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Error: ${e.toString()}")),
+//       );
+//     } finally {
+//       setState(() => _isLoadingRoute = false);
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Bus Route Map'),
+//         centerTitle: true,
+//         backgroundColor: Colors.green,
+//       ),
+//       body: Stack(
+//         children: [
+//           FlutterMap(
+//             mapController: _mapController,
+//             options: MapOptions(
+//               initialCenter: _userLocation ?? const LatLng(27.7172, 85.3240),
+//               initialZoom: _currentZoom,
+//               onPositionChanged: (position, hasGesture) {
+//                 if (hasGesture) {
+//                   setState(() => _currentZoom = position.zoom ?? _currentZoom);
+//                 }
+//               },
+//             ),
+//             children: [
+//               TileLayer(
+//                 urlTemplate: MapService.mapLayerOptions[_selectedLayer]!,
+//                 subdomains: const ['a', 'b', 'c'],
+//                 userAgentPackageName: 'com.example.app',
+//               ),
+//               if (_routeCoordinates.isNotEmpty)
+//                 PolylineLayer(
+//                   polylines: [
+//                     Polyline(
+//                       points: _routeCoordinates,
+//                       strokeWidth: 4.0,
+//                       color: Colors.blue,
+//                     ),
+//                   ],
+//                 ),
+//               PopupMarkerLayer(
+//                 options: PopupMarkerLayerOptions(
+//                   markers: BusStopData.stops.map((stop) {
+//                     return Marker(
+//                       width: 80.0,
+//                       height: 80.0,
+//                       point: stop.location,
+//                       child: const Icon(
+//                         Icons.location_on,
+//                         color: Colors.red,
+//                         size: 30.0,
+//                       ),
+//                     );
+//                   }).toList(),
+//                   popupController: _popupController,
+//                   markerTapBehavior: MarkerTapBehavior.togglePopup(),
+//                   popupDisplayOptions: PopupDisplayOptions(
+//                     builder: (context, marker) {
+//                       final stop = BusStopData.stops.firstWhere(
+//                         (s) => s.location == marker.point,
+//                       );
+//                       return Card(
+//                         child: Padding(
+//                           padding: const EdgeInsets.all(8.0),
+//                           child: Column(
+//                             mainAxisSize: MainAxisSize.min,
+//                             children: [
+//                               Text(
+//                                 stop.name,
+//                                 style: const TextStyle(
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 16.0,
+//                                 ),
+//                               ),
+//                               const SizedBox(height: 8.0),
+//                               const Text('Additional details about this stop'),
+//                             ],
+//                           ),
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                 ),
+//               ),
+//               if (_userLocation != null)
+//                 MarkerLayer(
+//                   markers: [
+//                     Marker(
+//                       width: 40.0,
+//                       height: 40.0,
+//                       point: _userLocation!,
+//                       child: const Icon(
+//                         Icons.person_pin_circle,
+//                         color: Colors.blue,
+//                         size: 40.0,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//             ],
+//           ),
+//           _buildLayerSelector(),
+//           _buildRouteInputs(),
+//           // New navigation overlay
+//           if (_isNavigating && _currentInstruction != null)
+//             Positioned(
+//               top: 100,
+//               left: 0,
+//               right: 0,
+//               child: NavigationOverlay(
+//                 instruction: _currentInstruction!,
+//                 isMuted: _isMuted,
+//                 onMuteToggle: () {
+//                   setState(() => _isMuted = !_isMuted);
+//                   _voiceGuidanceService.toggleMute();
+//                 },
+//                 onClose: () {
+//                   setState(() {
+//                     _isNavigating = false;
+//                     _currentInstruction = null;
+//                   });
+//                 },
+//               ),
+//             ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildLayerSelector() {
+//     return Positioned(
+//       top: 20,
+//       right: 20,
+//       child: Container(
+//         decoration: BoxDecoration(
+//           color: Colors.green.shade100,
+//           borderRadius: BorderRadius.circular(8),
+//         ),
+//         child: DropdownButton<String>(
+//           value: _selectedLayer,
+//           onChanged: (value) => setState(() => _selectedLayer = value!),
+//           items: MapService.mapLayerOptions.keys.map((layer) {
+//             return DropdownMenuItem<String>(
+//               value: layer,
+//               child: Text(
+//                 layer,
+//                 style: const TextStyle(color: Colors.black),
+//               ),
+//             );
+//           }).toList(),
+//           dropdownColor: Colors.green.shade100,
+//           underline: Container(),
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildRouteInputs() {
+//     return Positioned(
+//       bottom: 20,
+//       left: 20,
+//       right: 20,
+//       child: Card(
+//         elevation: 4,
+//         child: Padding(
+//           padding: const EdgeInsets.all(12.0),
+//           child: Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               TextField(
+//                 controller: _startController,
+//                 decoration: const InputDecoration(
+//                   labelText: "Start Location",
+//                   border: OutlineInputBorder(),
+//                 ),
+//               ),
+//               const SizedBox(height: 8.0),
+//               TextField(
+//                 controller: _endController,
+//                 decoration: const InputDecoration(
+//                   labelText: "End Location",
+//                   border: OutlineInputBorder(),
+//                 ),
+//               ),
+//               const SizedBox(height: 8.0),
+//               ElevatedButton(
+//                 onPressed: _isLoadingRoute ? null : _fetchRoute,
+//                 child: _isLoadingRoute
+//                     ? const CircularProgressIndicator()
+//                     : const Text("Find Route"),
+//               ),
+//               if (_routeError.isNotEmpty)
+//                 Padding(
+//                   padding: const EdgeInsets.only(top: 8.0),
+//                   child: Text(
+//                     _routeError,
+//                     style: const TextStyle(color: Colors.red),
+//                   ),
+//                 ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     _navigationSubscription?.cancel();
+//     _navigationService.dispose();
+//     _voiceGuidanceService.dispose();
+//     super.dispose();
+//   }
+// }
 
 
 
