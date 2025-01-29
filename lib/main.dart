@@ -7,23 +7,16 @@ import 'package:major_project/views/login_screen.dart';
 import 'firebase_options.dart';
 import 'package:major_project/views/forget_password_screen.dart';
 import 'package:major_project/views/home_screen.dart';
-<<<<<<< HEAD
-=======
 import 'package:major_project/views/admin_user_list_screen.dart';
 import 'package:major_project/views/user_verification_screen.dart';
 import 'package:major_project/controller/admin_gaurd.dart';
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-<<<<<<< HEAD
-  runApp(const Myapp());
-=======
   runApp(const MyApp());
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945
 }
 
 class MyApp extends StatelessWidget {
@@ -33,22 +26,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-<<<<<<< HEAD
-    return GetMaterialApp(
-      initialRoute: '/welcome',
-      getPages: [
-        GetPage(name: '/welcome', page: () => const WelcomeScreen()),
-        GetPage(name: '/login', page: () => const LoginScreen()),
-        GetPage(
-            name: '/forgetPassword', page: () => const ForgetPasswordScreen()),
-        GetPage(
-            name: '/home',
-            page: () => const HomeScreen()), // Assuming home screen exists
-      ],
-      theme: ThemeData(
-        textTheme: GoogleFonts.poppinsTextTheme(textTheme),
-      ),
-=======
     // Initialize the AdminGuard
     Get.put(AdminGuard());
 
@@ -59,18 +36,18 @@ class MyApp extends StatelessWidget {
         // Public routes (no guard needed)
         GetPage(name: '/welcome', page: () => const WelcomeScreen()),
         GetPage(name: '/login', page: () => const LoginScreen()),
-        GetPage(name: '/forgetPassword', page: () => const ForgetPasswordScreen()),
+        GetPage(
+            name: '/forgetPassword', page: () => const ForgetPasswordScreen()),
         GetPage(name: '/home', page: () => const HomeScreen()),
-        
+
         // Protected admin routes with middleware
         GetPage(
-          name: '/admin/users',
-          page: () => AdminUserListScreen(),
-          middlewares: [
-            RouteGuard(),
-          ],
-          transition: Transition.fadeIn
-        ),
+            name: '/admin/users',
+            page: () => AdminUserListScreen(),
+            middlewares: [
+              RouteGuard(),
+            ],
+            transition: Transition.fadeIn),
 
         GetPage(
           name: '/admin/verify-user',
@@ -83,13 +60,13 @@ class MyApp extends StatelessWidget {
           ],
         ),
       ],
-      
+
       theme: ThemeData(
         textTheme: GoogleFonts.poppinsTextTheme(textTheme),
         primarySwatch: Colors.green,
         scaffoldBackgroundColor: Colors.white,
       ),
-      
+
       // Error handling for invalid routes
       unknownRoute: GetPage(
         name: '/not-found',
@@ -102,14 +79,11 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945
+
       home: const WelcomeScreen(),
     );
   }
 }
-<<<<<<< HEAD
-=======
 
 class RouteGuard extends GetMiddleware {
   @override
@@ -117,9 +91,9 @@ class RouteGuard extends GetMiddleware {
     try {
       final adminGuard = Get.find<AdminGuard>();
       bool isAdmin = await adminGuard.isAdmin();
-      
-      // print("RouteGuard - Checking admin status: $isAdmin"); 
-      
+
+      // print("RouteGuard - Checking admin status: $isAdmin");
+
       if (!isAdmin) {
         // print("Access denied - Redirecting to home");
         Get.snackbar(
@@ -130,79 +104,15 @@ class RouteGuard extends GetMiddleware {
         );
         return GetNavConfig.fromRoute('/home');
       }
-      
+
       // print("Access granted - Proceeding to admin route: ${route.location}");
-      return route;  // Return the original route instead of using super
+      return route; // Return the original route instead of using super
     } catch (e) {
       // print("RouteGuard error: $e");
       return GetNavConfig.fromRoute('/home');
     }
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
@@ -234,7 +144,7 @@ class RouteGuard extends GetMiddleware {
 //   @override
 //   Widget build(BuildContext context) {
 //     final textTheme = Theme.of(context).textTheme;
-    
+
 //     return GetMaterialApp(
 //       title: 'Bus Fare Collection',
 //       initialRoute: '/welcome',
@@ -243,7 +153,7 @@ class RouteGuard extends GetMiddleware {
 //         GetPage(name: '/login', page: () => const LoginScreen()),
 //         GetPage(name: '/forgetPassword', page: () => const ForgetPasswordScreen()),
 //         GetPage(name: '/home', page: () => const HomeScreen()),
-        
+
 //         // Admin routes
 //         GetPage(
 //           name: '/admin/users',
@@ -269,53 +179,12 @@ class RouteGuard extends GetMiddleware {
 //   }
 // }
 
-
-
 // class RouteGuard extends GetMiddleware {
 //   @override
 //   RouteSettings? redirect(String? route) {
 //     return null; // Don't redirect, let the route proceed
 //   }
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
@@ -328,7 +197,6 @@ class RouteGuard extends GetMiddleware {
 // import 'package:major_project/views/home_screen.dart';
 // import 'package:major_project/views/admin_user_list_screen.dart';
 // import 'package:major_project/views/user_verification_screen.dart';
-
 
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
@@ -362,26 +230,16 @@ class RouteGuard extends GetMiddleware {
 // ),
 
 //   ],
-  
+
 //     theme: ThemeData(
 //       textTheme: GoogleFonts.poppinsTextTheme(textTheme),
-      
+
 //     ),
-    
+
 //     home: const WelcomeScreen(),
 //    );
 //   }
 // }
-
-
-
-
-
-
-
-
-
-
 
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
@@ -389,7 +247,6 @@ class RouteGuard extends GetMiddleware {
 // import 'package:firebase_core/firebase_core.dart';
 // import 'package:major_project/views/welcome_screen.dart';
 // import 'firebase_options.dart';
-
 
 // void main() async {
 //   WidgetsFlutterBinding.ensureInitialized();
@@ -409,11 +266,10 @@ class RouteGuard extends GetMiddleware {
 //    return GetMaterialApp(
 //     theme: ThemeData(
 //       textTheme: GoogleFonts.poppinsTextTheme(textTheme),
-      
+
 //     ),
-    
+
 //     home: const WelcomeScreen(),
 //    );
 //   }
 // }
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945

@@ -8,10 +8,10 @@ class AuthController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-    // Add RxBool for tracking admin status
+  // Add RxBool for tracking admin status
   final RxBool isAdmin = false.obs;
 
-    Future<void> registerUser({
+  Future<void> registerUser({
     required String name,
     required String mobile,
     required String email,
@@ -19,7 +19,8 @@ class AuthController extends GetxController {
     required String password,
   }) async {
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -30,12 +31,12 @@ class AuthController extends GetxController {
         'mobile': mobile,
         'email': email,
         'username': username,
-        'password' : password,
+        'password': password,
         'accepted_terms': true,
-        'balance': 0.00,          // NEW: Initial balance
-        'distance': 0.0,          // NEW: Total distance
-        'isOnBus': false,         // NEW: Tap status
-        'isVerified': false,      // NEW: Verification status
+        'balance': 0.00, // NEW: Initial balance
+        'distance': 0.0, // NEW: Total distance
+        'isOnBus': false, // NEW: Tap status
+        'isVerified': false, // NEW: Verification status
         'created_at': FieldValue.serverTimestamp(),
       });
 
@@ -46,8 +47,9 @@ class AuthController extends GetxController {
     }
   }
 
-   // NEW: Add method to update fare/distance after ride
-  Future<void> updateUserAfterRide(String uid, double fare, double distance) async {
+  // NEW: Add method to update fare/distance after ride
+  Future<void> updateUserAfterRide(
+      String uid, double fare, double distance) async {
     try {
       await _firestore.collection('users').doc(uid).update({
         'balance': FieldValue.increment(-fare),
@@ -80,12 +82,11 @@ class AuthController extends GetxController {
       String otp = _generateOtp();
       // Ideally, you would send this OTP via a backend service or Firebase function.
       await _auth.sendPasswordResetEmail(email: email);
-      
+
       Get.snackbar("Success", "OTP sent to your email!");
       // Store OTP in user data for comparison during verification (temporary solution)
       // In practice, you should store this in a secure way
       await _firestore.collection('users').doc(email).update({'otp': otp});
-
     } catch (e) {
       Get.snackbar("Error", "Failed to send OTP: ${e.toString()}");
     }
@@ -113,83 +114,78 @@ class AuthController extends GetxController {
   }
 
   Future<bool> loginUser(String username, String password) async {
-  try {
-    // First get the user document by username
-    QuerySnapshot query = await _firestore
-        .collection('users')
-        .where('username', isEqualTo: username)
-        .get();
+    try {
+      // First get the user document by username
+      QuerySnapshot query = await _firestore
+          .collection('users')
+          .where('username', isEqualTo: username)
+          .get();
 
-    if (query.docs.isEmpty) {
-      Get.snackbar("Error", "No user found with this username");
+      if (query.docs.isEmpty) {
+        Get.snackbar("Error", "No user found with this username");
+        return false;
+      }
+
+      var userDoc = query.docs.first;
+      String email = userDoc['email'];
+
+      // Sign in with Firebase Auth
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: email, password: password);
+
+      // Important: After login, fetch the complete user document using the UID
+      DocumentSnapshot userSnapshot = await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (!userSnapshot.exists) {
+        Get.snackbar("Error", "User document not found");
+        return false;
+      }
+
+      Map<String, dynamic> userData =
+          userSnapshot.data() as Map<String, dynamic>;
+
+      // Explicitly check for admin status
+      bool isAdminUser = userData['isAdmin'] == true; // Use strict comparison
+      isAdmin.value = isAdminUser;
+
+      // print("Login successful - Admin status: $isAdminUser"); // Debug print
+
+      // Store admin status in GetX state
+      if (isAdminUser) {
+        // print("Admin login detected - Verifying permissions");
+        bool adminVerified = await Get.find<AdminGuard>().isAdmin();
+
+        if (!adminVerified) {
+          Get.snackbar("Error", "Admin verification failed");
+          await _auth.signOut();
+          return false;
+        }
+
+        // print("Admin verification successful - Redirecting to admin panel");
+        // Change this line to match exact route name
+        await Get.offAllNamed('/admin/users'); // Add await here
+      } else {
+        // print("Regular user login - Redirecting to home");
+        await Get.offAllNamed('/home'); // Add await here
+      }
+
+      return true;
+    } catch (e) {
+      // print("Login error: $e");
+      Get.snackbar("Error", "Login failed: ${e.toString()}");
       return false;
     }
-
-    var userDoc = query.docs.first;
-    String email = userDoc['email'];
-    
-    // Sign in with Firebase Auth
-    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-      email: email, 
-      password: password
-    );
-
-    // Important: After login, fetch the complete user document using the UID
-    DocumentSnapshot userSnapshot = await _firestore
-        .collection('users')
-        .doc(userCredential.user!.uid)
-        .get();
-    
-    if (!userSnapshot.exists) {
-      Get.snackbar("Error", "User document not found");
-      return false;
-    }
-
-    Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
-    
-    // Explicitly check for admin status
-    bool isAdminUser = userData['isAdmin'] == true; // Use strict comparison
-    isAdmin.value = isAdminUser;
-
-    // print("Login successful - Admin status: $isAdminUser"); // Debug print
-
-    // Store admin status in GetX state
-   if (isAdminUser) {
-  // print("Admin login detected - Verifying permissions");
-  bool adminVerified = await Get.find<AdminGuard>().isAdmin();
-  
-  if (!adminVerified) {
-    Get.snackbar("Error", "Admin verification failed");
-    await _auth.signOut();
-    return false;
   }
-  
-  // print("Admin verification successful - Redirecting to admin panel");
-  // Change this line to match exact route name
-  await Get.offAllNamed('/admin/users');  // Add await here
-} else {
-  // print("Regular user login - Redirecting to home");
-  await Get.offAllNamed('/home');  // Add await here
-}
-
-    return true;
-  } catch (e) {
-    // print("Login error: $e");
-    Get.snackbar("Error", "Login failed: ${e.toString()}");
-    return false;
-  }
-}
-
-
 
   // Add method to check verification status
   Future<bool> isUserVerified(String userId) async {
     try {
-      DocumentSnapshot doc = await _firestore
-          .collection('users')
-          .doc(userId)
-          .get();
-      
+      DocumentSnapshot doc =
+          await _firestore.collection('users').doc(userId).get();
+
       return (doc.data() as Map<String, dynamic>)['isVerified'] ?? false;
     } catch (e) {
       // print("Error checking verification status: $e");
@@ -197,19 +193,17 @@ class AuthController extends GetxController {
     }
   }
 
-   Future<bool> checkAdminStatus() async {
+  Future<bool> checkAdminStatus() async {
     try {
       User? currentUser = _auth.currentUser;
       if (currentUser == null) return false;
 
-      DocumentSnapshot userDoc = await _firestore
-          .collection('users')
-          .doc(currentUser.uid)
-          .get();
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
 
-      bool isAdminUser = userDoc.exists && 
+      bool isAdminUser = userDoc.exists &&
           (userDoc.data() as Map<String, dynamic>)['isAdmin'] == true;
-      
+
       isAdmin.value = isAdminUser;
       return isAdminUser;
     } catch (e) {
@@ -218,7 +212,6 @@ class AuthController extends GetxController {
     }
   }
 
- 
   Future<void> logoutUser() async {
     try {
       await _auth.signOut();
@@ -227,7 +220,6 @@ class AuthController extends GetxController {
       Get.snackbar("Error", "Failed to logout: ${e.toString()}");
     }
   }
-
 }
 
 
@@ -545,7 +537,6 @@ class AuthController extends GetxController {
 //     }
 //   }
 // }
-
 
 
 

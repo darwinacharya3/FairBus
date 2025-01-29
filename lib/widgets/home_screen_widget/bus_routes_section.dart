@@ -34,12 +34,8 @@ class BusRoutesSection extends StatelessWidget {
                   // Navigate to the full map screen
                   Navigator.push(
                     context,
-<<<<<<< HEAD
                     MaterialPageRoute(
                         builder: (context) => const FullMapScreen()),
-=======
-                    MaterialPageRoute(builder: (context) => const FullMapScreen()),
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945
                   );
                 },
                 child: Stack(
@@ -239,7 +235,6 @@ class BusRoutesSection extends StatelessWidget {
 //     );
 //   }
 // }
-
 
 
 

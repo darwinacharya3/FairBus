@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 import 'package:major_project/views/user_verification_screen.dart';
 import 'package:major_project/controller/auth_controller.dart';
 
-
 class AdminUserListScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthController _authController = Get.find<AuthController>();
@@ -78,9 +77,8 @@ class AdminUserListScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.admin_panel_settings, 
-                       color: Colors.green[600], 
-                       size: 32),
+                  Icon(Icons.admin_panel_settings,
+                      color: Colors.green[600], size: 32),
                   const SizedBox(width: 16),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +103,6 @@ class AdminUserListScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(
@@ -118,12 +115,12 @@ class AdminUserListScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: _firestore
                     .collection('users')
-                    .orderBy('created_at', descending: true)  // Sort by creation time
+                    .orderBy('created_at',
+                        descending: true) // Sort by creation time
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
@@ -149,7 +146,7 @@ class AdminUserListScreen extends StatelessWidget {
                     var data = doc.data() as Map<String, dynamic>;
                     return data['verificationStatus'] == 'pending';
                   }).toList();
-                  
+
                   var otherUsers = users.where((doc) {
                     var data = doc.data() as Map<String, dynamic>;
                     return data['verificationStatus'] != 'pending';
@@ -161,17 +158,23 @@ class AdminUserListScreen extends StatelessWidget {
                   return ListView.builder(
                     itemCount: sortedUsers.length,
                     itemBuilder: (context, index) {
-                      var userData = sortedUsers[index].data() as Map<String, dynamic>;
+                      var userData =
+                          sortedUsers[index].data() as Map<String, dynamic>;
                       var userId = sortedUsers[index].id;
-                      
+
                       bool isVerified = userData['isVerified'] ?? false;
-                      String verificationStatus = userData['verificationStatus'] ?? 'pending';
-                      
+                      String verificationStatus =
+                          userData['verificationStatus'] ?? 'pending';
+
                       // Check if the user is new (less than 24 hours old)
                       bool isNew = false;
                       if (userData['created_at'] != null) {
-                        Timestamp createdAt = userData['created_at'] as Timestamp;
-                        isNew = DateTime.now().difference(createdAt.toDate()).inHours < 24;
+                        Timestamp createdAt =
+                            userData['created_at'] as Timestamp;
+                        isNew = DateTime.now()
+                                .difference(createdAt.toDate())
+                                .inHours <
+                            24;
                       }
 
                       return Card(
@@ -182,10 +185,12 @@ class AdminUserListScreen extends StatelessWidget {
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: isNew ? BorderSide(
-                            color: Colors.green[600]!,
-                            width: 2,
-                          ) : BorderSide.none,
+                          side: isNew
+                              ? BorderSide(
+                                  color: Colors.green[600]!,
+                                  width: 2,
+                                )
+                              : BorderSide.none,
                         ),
                         child: Stack(
                           children: [
@@ -198,11 +203,12 @@ class AdminUserListScreen extends StatelessWidget {
                                 radius: 25,
                                 backgroundColor: Colors.green[50],
                                 backgroundImage: userData['profileUrl'] != null
-                                    ? CachedNetworkImageProvider(userData['profileUrl'])
+                                    ? CachedNetworkImageProvider(
+                                        userData['profileUrl'])
                                     : null,
                                 child: userData['profileUrl'] == null
-                                    ? Icon(Icons.person, 
-                                          color: Colors.green[600])
+                                    ? Icon(Icons.person,
+                                        color: Colors.green[600])
                                     : null,
                               ),
                               title: Text(
@@ -222,7 +228,8 @@ class AdminUserListScreen extends StatelessWidget {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(verificationStatus),
+                                      color:
+                                          _getStatusColor(verificationStatus),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
@@ -251,28 +258,29 @@ class AdminUserListScreen extends StatelessWidget {
                                 },
                               ),
                             ),
-                            if (isNew) Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green[600],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Text(
-                                  'NEW',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                            if (isNew)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[600],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'NEW',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                       );
@@ -675,5 +683,4 @@ class AdminUserListScreen extends StatelessWidget {
 //     );
 //   }
 // }
-
 

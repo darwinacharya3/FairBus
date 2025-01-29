@@ -8,7 +8,7 @@ import 'package:major_project/utils/cloudinary_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class UserProfileSection extends StatefulWidget {
-  const UserProfileSection({super.key});
+  const UserProfileSection({Key? key}) : super(key: key);
 
   @override
   State<UserProfileSection> createState() => _UserProfileSectionState();
@@ -46,7 +46,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
         throw "No authenticated user found";
       }
 
-      DocumentSnapshot<Map<String, dynamic>> userDoc = 
+      DocumentSnapshot<Map<String, dynamic>> userDoc =
           await _firestore.collection('users').doc(user.uid).get();
 
       if (!userDoc.exists || userDoc.data() == null) {
@@ -54,13 +54,14 @@ class _UserProfileSectionState extends State<UserProfileSection> {
       }
 
       Map<String, dynamic> userData = userDoc.data()!;
-      
+
       setState(() {
         _username = userData['username']?.toString() ?? "User";
         _profileImageUrl = userData['profileUrl']?.toString() ?? "";
         _isVerified = userData['isVerified'] ?? false;
-        _verificationStatus = userData['verificationStatus']?.toString() ?? 'pending';
-        
+        _verificationStatus =
+            userData['verificationStatus']?.toString() ?? 'pending';
+
         var balanceData = userData['balance'];
         if (balanceData != null) {
           if (balanceData is int) {
@@ -71,7 +72,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
             _balance = 0.0;
           }
         }
-        
+
         _isError = false;
         _errorMessage = "";
       });
@@ -94,7 +95,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
   Future<void> _uploadNewProfileImage() async {
     try {
       setState(() => _isLoading = true);
-      
+
       final picker = ImagePicker();
       final pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
@@ -120,7 +121,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
             _isError = false;
             _errorMessage = "";
           });
-          
+
           Get.snackbar(
             "Success",
             "Profile picture updated successfully!",
@@ -132,14 +133,6 @@ class _UserProfileSectionState extends State<UserProfileSection> {
         }
       }
     } catch (e) {
-<<<<<<< HEAD
-      Get.snackbar(
-          "Error", "Failed to upload profile picture: ${e.toString()}");
-    }
-  }
-
-  @override
-=======
       // print("Error in _uploadNewProfileImage: $e");
       Get.snackbar(
         "Error",
@@ -190,81 +183,12 @@ class _UserProfileSectionState extends State<UserProfileSection> {
     }
   }
 
-   @override
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945
+  @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-<<<<<<< HEAD
-        color: const Color(0xFFF5F5F5), // Light gray background
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF4CAF50), // Green border color
-          width: 1.5,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Profile Picture with Edit Icon
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: _profileImage != null
-                    ? FileImage(_profileImage!)
-                    : (_profileImageUrl.isNotEmpty
-                            ? NetworkImage(_profileImageUrl)
-                            : const AssetImage('assets/avatar_placeholder.png'))
-                        as ImageProvider,
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: _uploadProfileImage,
-                  child: const CircleAvatar(
-                    radius: 14,
-                    backgroundColor: Colors.green,
-                    child: Icon(
-                      Icons.camera_alt,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 16),
-          // User Details and Balance
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _greetingText,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Balance: NPR 500",
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-=======
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
@@ -279,7 +203,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
           ),
         ],
       ),
-      child: _isLoading 
+      child: _isLoading
           ? const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
@@ -385,37 +309,10 @@ class _UserProfileSectionState extends State<UserProfileSection> {
                         ),
                       ),
                     ],
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945
                   ),
                 ),
               ],
             ),
-<<<<<<< HEAD
-          ),
-          // Edit Profile Button
-          ElevatedButton.icon(
-            onPressed: () {
-              debugPrint("Edit Profile clicked.");
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-            icon: const Icon(Icons.edit, size: 18),
-            label: Text(
-              "Edit",
-              style: GoogleFonts.poppins(fontSize: 14),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-=======
     );
   }
 }
@@ -856,7 +753,6 @@ class _UserProfileSectionState extends State<UserProfileSection> {
 
 
 
->>>>>>> dc9a72e9b365f22e569a0562ecf87630965a8945
 
 
 
@@ -1039,7 +935,6 @@ class _UserProfileSectionState extends State<UserProfileSection> {
 //   );
 // }  
 // }
-
 
 
 
