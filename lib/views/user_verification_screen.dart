@@ -536,7 +536,7 @@ Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
       title: const Text(
-        'Verify Documents',
+        'Verify Document',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       backgroundColor: Colors.green[600],
@@ -972,6 +972,9 @@ Color _getStatusColor(String status) {
 //     );
 //   }
 
+
+
+
 //   Future<void> _updateVerificationStatus(bool isApproved, String notes) async {
 //     try {
 //       User? adminUser = _auth.currentUser;
@@ -1015,7 +1018,7 @@ Color _getStatusColor(String status) {
       
 //       Get.back();
 //     } catch (e) {
-//       // print("Error in _updateVerificationStatus: $e");
+//       // print("Error in _updateVeriftatus: $e");
 //       Get.snackbar(
 //         'Error',
 //         'Failed to update verification status: $e',
