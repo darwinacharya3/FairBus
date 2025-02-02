@@ -424,70 +424,7 @@ class UserVerificationScreen extends StatelessWidget {
     }
   }
 
-// Future<void> _updateVerificationStatus(bool isApproved, String notes) async {
-//   try {
-//     User? adminUser = _auth.currentUser;
-//     if (adminUser == null) throw "Admin not authenticated";
 
-//     DocumentSnapshot adminDoc = await _firestore
-//         .collection('users')
-//         .doc(adminUser.uid)
-//         .get();
-
-//     if (!adminDoc.exists) throw "Admin document not found";
-
-//     // Create timestamp explicitly
-//     final timestamp = Timestamp.now();
-
-//     // Prepare verification history entry
-//     final historyEntry = {
-//       'status': isApproved ? 'verified' : 'rejected',
-//       'notes': notes,
-//       'timestamp': timestamp,
-//       'adminId': adminUser.uid,
-//       'adminUsername': adminDoc['username'] ?? 'Unknown Admin',
-//     };
-
-//     // Update user document
-//     await _firestore.collection('users').doc(userId).update({
-//       'isVerified': isApproved,
-//       'verificationStatus': isApproved ? 'verified' : 'rejected',
-//       'verificationNotes': notes,
-//       'verifiedAt': timestamp,
-//       'verifiedBy': {
-//         'adminId': adminUser.uid,
-//         'adminUsername': adminDoc['username'] ?? 'Unknown Admin',
-//       },
-//       'verificationHistory': FieldValue.arrayUnion([historyEntry]),
-//     });
-
-//     // Add notification
-//     await _firestore.collection('notifications').add({
-//       'userId': userId,
-//       'type': 'verification_status',
-//       'status': isApproved ? 'verified' : 'rejected',
-//       'message': isApproved
-//           ? 'Your account has been verified successfully!'
-//           : 'Your account verification was rejected. Reason: $notes',
-//       'createdAt': timestamp,
-//       'read': false
-//     });
-
-//     Get.snackbar(
-//       'Success',
-//       'User ${isApproved ? 'verified' : 'rejected'} successfully',
-//       backgroundColor: isApproved ? Colors.green[100] : Colors.red[100],
-//     );
-
-//     Get.back();
-//   } catch (e) {
-//     Get.snackbar(
-//       'Error',
-//       'Failed to update verification status: $e',
-//       backgroundColor: Colors.red[100],
-//     );
-//   }
-// }
 
   void _showRejectDialog(BuildContext context, String notes) {
     showDialog(
@@ -629,6 +566,13 @@ class UserVerificationScreen extends StatelessWidget {
     }
   }
 }
+
+
+
+
+
+
+
 
 // import 'package:flutter/material.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';

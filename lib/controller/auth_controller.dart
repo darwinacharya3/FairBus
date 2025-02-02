@@ -166,7 +166,7 @@ class AuthController extends GetxController {
 
         // print("Admin verification successful - Redirecting to admin panel");
         // Change this line to match exact route name
-        await Get.offAllNamed('/admin/users'); // Add await here
+        await Get.offAllNamed('/admin/dashboard'); // Add await here
       } else {
         // print("Regular user login - Redirecting to home");
         await Get.offAllNamed('/home'); // Add await here

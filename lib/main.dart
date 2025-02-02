@@ -10,12 +10,15 @@ import 'package:major_project/views/home_screen.dart';
 import 'package:major_project/views/admin_user_list_screen.dart';
 import 'package:major_project/views/user_verification_screen.dart';
 import 'package:major_project/controller/admin_gaurd.dart';
+import 'package:major_project/views/admin_dashboard_screen.dart';
+import 'package:major_project/controller/auth_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  Get.put(AuthController());
   runApp(const MyApp());
 }
 
@@ -39,6 +42,15 @@ class MyApp extends StatelessWidget {
         GetPage(
             name: '/forgetPassword', page: () => const ForgetPasswordScreen()),
         GetPage(name: '/home', page: () => const HomeScreen()),
+
+       GetPage(
+          name: '/admin/dashboard',
+          page: () => AdminDashboardScreen(),
+          middlewares: [RouteGuard()],
+          transition: Transition.fadeIn
+      ),
+
+      
 
         // Protected admin routes with middleware
         GetPage(
@@ -85,6 +97,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
+
 class RouteGuard extends GetMiddleware {
   @override
   Future<GetNavConfig?> redirectDelegate(GetNavConfig route) async {
@@ -92,10 +106,7 @@ class RouteGuard extends GetMiddleware {
       final adminGuard = Get.find<AdminGuard>();
       bool isAdmin = await adminGuard.isAdmin();
 
-      // print("RouteGuard - Checking admin status: $isAdmin");
-
       if (!isAdmin) {
-        // print("Access denied - Redirecting to home");
         Get.snackbar(
           'Access Denied',
           'You need admin privileges to access this section',
@@ -105,14 +116,56 @@ class RouteGuard extends GetMiddleware {
         return GetNavConfig.fromRoute('/home');
       }
 
-      // print("Access granted - Proceeding to admin route: ${route.location}");
-      return route; // Return the original route instead of using super
+      // If user is admin but trying to access /admin, redirect to dashboard
+      if (route.location == '/admin') {
+        return GetNavConfig.fromRoute('/admin/dashboard');
+      }
+
+      return route;
     } catch (e) {
-      // print("RouteGuard error: $e");
       return GetNavConfig.fromRoute('/home');
     }
   }
 }
+
+
+
+
+
+
+// class RouteGuard extends GetMiddleware {
+//   @override
+//   Future<GetNavConfig?> redirectDelegate(GetNavConfig route) async {
+//     try {
+//       final adminGuard = Get.find<AdminGuard>();
+//       bool isAdmin = await adminGuard.isAdmin();
+
+//       // print("RouteGuard - Checking admin status: $isAdmin");
+
+//       if (!isAdmin) {
+//         // print("Access denied - Redirecting to home");
+//         Get.snackbar(
+//           'Access Denied',
+//           'You need admin privileges to access this section',
+//           backgroundColor: Colors.red[100],
+//           duration: const Duration(seconds: 3),
+//         );
+//         return GetNavConfig.fromRoute('/home');
+//       }
+
+//       // print("Access granted - Proceeding to admin route: ${route.location}");
+//       return route; // Return the original route instead of using super
+//     } catch (e) {
+//       // print("RouteGuard error: $e");
+//       return GetNavConfig.fromRoute('/home');
+//     }
+//   }
+// }
+
+
+
+
+
 
 // import 'package:flutter/material.dart';
 // import 'package:get/get.dart';
