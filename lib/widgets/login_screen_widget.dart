@@ -85,7 +85,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Text(
-                "Welcome Back",
+                "Welcome Bidu",
                 style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
