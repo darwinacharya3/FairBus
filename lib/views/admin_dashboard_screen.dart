@@ -9,7 +9,7 @@ class AdminDashboardScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthController _authController = Get.find<AuthController>();
 
-  AdminDashboardScreen({Key? key}) : super(key: key);
+  AdminDashboardScreen({super.key});
 
   Future<Map<String, dynamic>> _getDashboardStats() async {
     try {
@@ -254,10 +254,25 @@ class AdminDashboardScreen extends StatelessWidget {
                                 'Track bus journeys',
                                   Icons.map,
                                  Colors.blue[600]!,
+                                () => Get.toNamed('/admin/history'),
+                              ),
+
+                    ),
+
+                      SizedBox(
+                      width: (constraints.maxWidth - 16) / 2,
+                       child:_buildFeatureCard(
+                                'Live Monitoring',
+                                'Real Time Database Monitoring',
+                                  Icons.live_tv,
+                                 Colors.blue[600]!,
                                 () => Get.toNamed('/admin/journeys'),
                               ),
 
                     ),
+
+                    
+
 
                     SizedBox(
                       width: (constraints.maxWidth - 16) / 2,

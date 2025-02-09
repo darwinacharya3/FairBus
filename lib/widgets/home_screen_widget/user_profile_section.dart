@@ -8,7 +8,7 @@ import 'package:major_project/utils/cloudinary_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class UserProfileSection extends StatefulWidget {
-  const UserProfileSection({Key? key}) : super(key: key);
+  const UserProfileSection({super.key});
 
   @override
   State<UserProfileSection> createState() => _UserProfileSectionState();

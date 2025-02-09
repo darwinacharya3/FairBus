@@ -9,7 +9,7 @@ class AdminUserListScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthController _authController = Get.find<AuthController>();
 
-  AdminUserListScreen({Key? key}) : super(key: key);
+  AdminUserListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

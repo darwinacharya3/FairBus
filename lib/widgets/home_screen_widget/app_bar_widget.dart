@@ -67,7 +67,7 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.notifications),
-                  onPressed: () => Get.to(() => NotificationScreen()),
+                  onPressed: () => Get.to(() => const NotificationScreen()),
                 ),
                 if (unreadCount > 0)
                   Positioned(

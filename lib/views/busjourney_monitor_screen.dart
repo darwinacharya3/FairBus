@@ -6,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 class BusJourneyMonitorScreen extends StatelessWidget {
   final FirebaseDatabase _database = FirebaseDatabase.instance;
   
-  BusJourneyMonitorScreen({Key? key}) : super(key: key);
+  BusJourneyMonitorScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -107,8 +107,8 @@ class BusJourneyMonitorScreen extends StatelessWidget {
           // Refresh data
           _database.ref().get();
         },
-        child: const Icon(Icons.refresh),
         backgroundColor: Colors.green,
+        child: const Icon(Icons.refresh),
       ),
     );
   }

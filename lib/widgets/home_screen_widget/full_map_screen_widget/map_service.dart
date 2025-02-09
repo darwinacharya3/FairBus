@@ -34,7 +34,7 @@ class MapService {
   }
 
   MapBounds calculateRouteBounds(List<LatLng> routePoints) {
-    if (routePoints.isEmpty) return MapBounds(center: LatLng(27.7172, 85.3240), zoom: 14.0);
+    if (routePoints.isEmpty) return MapBounds(center: const LatLng(27.7172, 85.3240), zoom: 14.0);
 
     double minLat = routePoints.map((p) => p.latitude).reduce(math.min);
     double maxLat = routePoints.map((p) => p.latitude).reduce(math.max);

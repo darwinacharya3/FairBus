@@ -17,10 +17,10 @@ class UserVerificationScreen extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   UserVerificationScreen({
-    Key? key,
+    super.key,
     required this.userData,
     required this.userId,
-  }) : super(key: key);
+  });
 
   Widget _buildUserInfoSection() {
     return Card(
