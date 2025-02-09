@@ -12,6 +12,8 @@ import 'package:major_project/views/user_verification_screen.dart';
 import 'package:major_project/controller/admin_gaurd.dart';
 import 'package:major_project/views/admin_dashboard_screen.dart';
 import 'package:major_project/controller/auth_controller.dart';
+import 'package:major_project/views/busjourney_monitor_screen.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,8 +52,11 @@ class MyApp extends StatelessWidget {
           transition: Transition.fadeIn
       ),
 
-      
-
+    GetPage(
+        name: '/admin/journeys',
+        page: () => BusJourneyMonitorScreen(),
+        middlewares: [RouteGuard()],
+),
         // Protected admin routes with middleware
         GetPage(
             name: '/admin/users',

@@ -249,6 +249,18 @@ class AdminDashboardScreen extends StatelessWidget {
                     ),
                     SizedBox(
                       width: (constraints.maxWidth - 16) / 2,
+                       child:_buildFeatureCard(
+                                'Journey Monitor',
+                                'Track bus journeys',
+                                  Icons.map,
+                                 Colors.blue[600]!,
+                                () => Get.toNamed('/admin/journeys'),
+                              ),
+
+                    ),
+
+                    SizedBox(
+                      width: (constraints.maxWidth - 16) / 2,
                       child: _buildFeatureCard(
                         'Reports',
                         'View system reports',
