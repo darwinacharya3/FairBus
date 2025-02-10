@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:major_project/utils/cloudinary_helper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:major_project/controller/balance_controller.dart';
 
 class UserProfileSection extends StatefulWidget {
   const UserProfileSection({super.key});
@@ -17,13 +18,14 @@ class UserProfileSection extends StatefulWidget {
 class _UserProfileSectionState extends State<UserProfileSection> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final BalanceController _balanceController = Get.put(BalanceController());
 
   String _username = "";
   String _profileImageUrl = "";
   bool _isLoading = false;
   bool _isError = false;
   String _errorMessage = "";
-  double _balance = 0.0;
+  
   bool _isVerified = false;
   String _verificationStatus = 'pending';
 
@@ -61,21 +63,12 @@ class _UserProfileSectionState extends State<UserProfileSection> {
         _isVerified = userData['isVerified'] ?? false;
         _verificationStatus =
             userData['verificationStatus']?.toString() ?? 'pending';
-
-        var balanceData = userData['balance'];
-        if (balanceData != null) {
-          if (balanceData is int) {
-            _balance = balanceData.toDouble();
-          } else if (balanceData is double) {
-            _balance = balanceData;
-          } else {
-            _balance = 0.0;
-          }
-        }
-
-        _isError = false;
-        _errorMessage = "";
       });
+
+      await _balanceController.loadBalance();
+
+        
+     
     } catch (e) {
       // print("Error in _loadUserData: $e");
       setState(() {
@@ -83,7 +76,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
         _errorMessage = e.toString();
         _username = "User";
         _profileImageUrl = "";
-        _balance = 0.0;
+        
         _isVerified = false;
         _verificationStatus = 'pending';
       });
@@ -290,24 +283,44 @@ class _UserProfileSectionState extends State<UserProfileSection> {
                         ],
                       ),
                       const SizedBox(height: 4),
+
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4CAF50).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          "NPR ${_balance.toStringAsFixed(2)}",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: const Color(0xFF4CAF50),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4CAF50).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Obx(() => Text(
+                      "NPR ${_balanceController.balance.value.toStringAsFixed(2)}",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF4CAF50),
+                        fontWeight: FontWeight.w600,
                       ),
+                    ),
+                  ),
+                ),
+                      // Container(
+                      //   padding: const EdgeInsets.symmetric(
+                      //     horizontal: 12,
+                      //     vertical: 6,
+                      //   ),
+                      //   decoration: BoxDecoration(
+                      //     color: const Color(0xFF4CAF50).withOpacity(0.1),
+                      //     borderRadius: BorderRadius.circular(20),
+                      //   ),
+                      //   child: Text(
+                      //     "NPR ${_balance.toStringAsFixed(2)}",
+                      //     style: GoogleFonts.poppins(
+                      //       fontSize: 14,
+                      //       color: const Color(0xFF4CAF50),
+                      //       fontWeight: FontWeight.w600,
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),

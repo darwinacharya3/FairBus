@@ -13,6 +13,7 @@ import 'package:esewa_flutter_sdk/esewa_config.dart';
 import 'package:esewa_flutter_sdk/esewa_payment.dart';
 import 'package:esewa_flutter_sdk/esewa_payment_success_result.dart';
 import 'package:major_project/controller/card_request_controller.dart';
+import 'package:major_project/controller/balance_controller.dart';
 
 class PaymentIntegrationSection extends StatelessWidget {
   
@@ -79,9 +80,11 @@ class PaymentIntegrationSection extends StatelessWidget {
 
   void _verifyTransaction(
       BuildContext context, EsewaPaymentSuccessResult result) async {
-    // TODO: Implement actual verification with your backend
+    
     // For now, using a mock verification
     await Future.delayed(const Duration(seconds: 2));
+    final BalanceController balanceController = Get.find<BalanceController>();
+    await balanceController.updateBalance(100.0);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -92,7 +95,7 @@ class PaymentIntegrationSection extends StatelessWidget {
         backgroundColor: Colors.green,
       ),
     );
-    // TODO: Update user balance in your backend
+    
   }
 
    Color _getStatusColor(String status) {
