@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
 
     GetPage(
   name: '/admin/history',
-  page: () => const JourneyHistoryScreen(),
+  page: () => JourneyHistoryScreen(),
   middlewares: [RouteGuard()],
 ),
 
