@@ -4,8 +4,10 @@ import 'package:major_project/widgets/home_screen_widget/user_profile_section.da
 import 'package:major_project/widgets/home_screen_widget/payment_integration_section.dart';
 import 'package:major_project/widgets/home_screen_widget/bus_routes_section.dart';
 
+
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  
+  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class HomeScreen extends StatelessWidget {
               // Payment Integration Section (40%)
               SizedBox(
                 height: paymentIntegrationHeight,
-                child: const PaymentIntegrationSection(),
+                child: PaymentIntegrationSection(),
               ),
 
               // Map Section (40%)

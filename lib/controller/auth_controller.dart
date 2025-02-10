@@ -33,9 +33,7 @@ class AuthController extends GetxController {
         'username': username,
         'password': password,
         'accepted_terms': true,
-        'balance': 0.00, // NEW: Initial balance
-        'distance': 0.0, // NEW: Total distance
-        'isOnBus': false, // NEW: Tap status
+        // 'balance': 0.00, // NEW: Initial balance
         'isVerified': false, // NEW: Verification status
         'created_at': FieldValue.serverTimestamp(),
       });

@@ -218,17 +218,11 @@ class AdminDashboardScreen extends StatelessWidget {
                     SizedBox(
                       width: (constraints.maxWidth - 16) / 2,
                       child: _buildFeatureCard(
-                        'Bus Management',
-                        'Manage bus routes',
-                        Icons.directions_bus,
+                        'RFID Cards',
+                        'Assign RFID Cards',
+                        Icons.card_membership,
                         Colors.blue[600]!,
-                        () {
-                          Get.snackbar(
-                            'Coming Soon',
-                            'Bus management feature will be available soon',
-                            backgroundColor: Colors.blue[100],
-                          );
-                        },
+                        () => Get.toNamed('/admin/rfid-management'),
                       ),
                     ),
                     SizedBox(

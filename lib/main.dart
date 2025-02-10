@@ -12,8 +12,13 @@ import 'package:major_project/views/user_verification_screen.dart';
 import 'package:major_project/controller/admin_gaurd.dart';
 import 'package:major_project/views/admin_dashboard_screen.dart';
 import 'package:major_project/controller/auth_controller.dart';
+import 'package:major_project/controller/admin_rfid_controller.dart';
 import 'package:major_project/views/busjourney_monitor_screen.dart';
 import 'package:major_project/views/journey_history_screen.dart';
+import 'package:major_project/views/admin_rfid_management/rfid_management_screen.dart';
+import 'package:major_project/views/admin_rfid_management/add_rfid_screen.dart';
+import 'package:major_project/views/admin_rfid_management/assign_rfid_screen.dart';
+import 'package:major_project/views/admin_rfid_management/view_assignments_screen.dart';
 
 
 void main() async {
@@ -22,6 +27,8 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   Get.put(AuthController());
+  Get.put(AdminRFIDController());
+
   runApp(const MyApp());
 }
 
@@ -44,7 +51,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/login', page: () => const LoginScreen()),
         GetPage(
             name: '/forgetPassword', page: () => const ForgetPasswordScreen()),
-        GetPage(name: '/home', page: () => const HomeScreen()),
+        GetPage(name: '/home', page: () => HomeScreen()),
 
        GetPage(
           name: '/admin/dashboard',
@@ -84,6 +91,23 @@ class MyApp extends StatelessWidget {
             RouteGuard(),
           ],
         ),
+
+        GetPage(
+    name: '/admin/rfid-management',
+    page: () => const RFIDManagementScreen(),
+  ),
+  GetPage(
+    name: '/admin/rfid-management/add',
+    page: () => AddRFIDScreen(),
+  ),
+  GetPage(
+    name: '/admin/rfid-management/assign',
+    page: () => const AssignRFIDScreen(),
+  ),
+  GetPage(
+    name: '/admin/rfid-management/view-assignments',
+    page: () => const ViewAssignmentsScreen(),
+  ),
       ],
 
       theme: ThemeData(
