@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:major_project/controller/admin_rfid_controller.dart';
 
 class ViewAssignmentsScreen extends StatelessWidget {
-  const ViewAssignmentsScreen({Key? key}) : super(key: key);
+  const ViewAssignmentsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

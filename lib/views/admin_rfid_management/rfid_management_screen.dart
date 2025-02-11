@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RFIDManagementScreen extends StatelessWidget {
-  const RFIDManagementScreen({Key? key}) : super(key: key);
+  const RFIDManagementScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

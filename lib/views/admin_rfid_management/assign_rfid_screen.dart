@@ -5,7 +5,7 @@ import 'package:major_project/controller/admin_rfid_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AssignRFIDScreen extends StatelessWidget {
-  const AssignRFIDScreen({Key? key}) : super(key: key);
+  const AssignRFIDScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +69,7 @@ class AssignRFIDScreen extends StatelessWidget {
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(color: Colors.green),
+                                        borderSide: const BorderSide(color: Colors.green),
                                       ),
                                     ),
                                     items: [

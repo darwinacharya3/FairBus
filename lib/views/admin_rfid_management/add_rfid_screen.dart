@@ -7,7 +7,7 @@ class AddRFIDScreen extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
   final _uidController = TextEditingController();
 
-  AddRFIDScreen({Key? key}) : super(key: key);
+  AddRFIDScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class AddRFIDScreen extends StatelessWidget {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.green),
+                    borderSide: const BorderSide(color: Colors.green),
                   ),
                 ),
                 validator: (value) {

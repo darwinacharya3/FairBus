@@ -1,17 +1,15 @@
 // journey_history_widgets.dart
-
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 
 
 class JourneyStatistics extends StatelessWidget {
   final List<Map<String, dynamic>> journeys;
 
   const JourneyStatistics({
-    Key? key,
+    super.key,
     required this.journeys,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +149,7 @@ class JourneyStatistics extends StatelessWidget {
                 (topJourneys.first['fare'] as num).toDouble() * 1.2,
               titlesData: FlTitlesData(
                 show: true,
-                bottomTitles: AxisTitles(
+                bottomTitles: const AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: false,
                   ),
@@ -168,8 +166,8 @@ class JourneyStatistics extends StatelessWidget {
                     },
                   ),
                 ),
-                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
               borderData: FlBorderData(show: false),
               barGroups: List.generate(
@@ -238,10 +236,10 @@ class JourneyList extends StatelessWidget {
   final Function(Map<String, dynamic>) onJourneyTap;
 
   const JourneyList({
-    Key? key,
+    super.key,
     required this.journeys,
     required this.onJourneyTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -319,9 +317,9 @@ class JourneyDetailsSheet extends StatelessWidget {
   final Map<String, dynamic> journey;
 
   const JourneyDetailsSheet({
-    Key? key,
+    super.key,
     required this.journey,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

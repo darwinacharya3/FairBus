@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:major_project/views/welcome_screen.dart';
 import 'package:major_project/views/login_screen.dart';
 import 'firebase_options.dart';
@@ -26,6 +27,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  FirebaseDatabase.instance.setPersistenceEnabled(true);
   Get.put(AuthController());
   Get.put(AdminRFIDController());
 
@@ -68,7 +70,7 @@ class MyApp extends StatelessWidget {
 
     GetPage(
   name: '/admin/history',
-  page: () => JourneyHistoryScreen(),
+  page: () => const JourneyHistoryScreen(),
   middlewares: [RouteGuard()],
 ),
 

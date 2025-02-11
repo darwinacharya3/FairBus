@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RFIDManagementCard extends StatelessWidget {
-  const RFIDManagementCard({Key? key}) : super(key: key);
+  const RFIDManagementCard({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -184,7 +184,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
     
     if (_searchQuery.isNotEmpty) {
       // Create a range for RFID search
-      String searchEnd = _searchQuery + '\uf8ff';
+      String searchEnd = '$_searchQuery\uf8ff';
       query = query.where('rfid', isGreaterThanOrEqualTo: _searchQuery)
                   .where('rfid', isLessThan: searchEnd);
     }
@@ -251,7 +251,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Container(
+                  SizedBox(
                     width: MediaQuery.of(context).size.width - 64, // Account for padding
                     child: Text(
                       'Start: ${journey['start_latitude']}, ${journey['start_longitude']}',
@@ -260,7 +260,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
                     ),
                   ),
                   if (isCompleted)
-                    Container(
+                    SizedBox(
                       width: MediaQuery.of(context).size.width - 64,
                       child: Text(
                         'End: ${journey['end_latitude']}, ${journey['end_longitude']}',

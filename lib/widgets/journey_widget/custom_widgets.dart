@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class StatisticsCard extends StatelessWidget {
   final Map<String, dynamic> statistics;
 
-  const StatisticsCard({Key? key, required this.statistics}) : super(key: key);
+  const StatisticsCard({super.key, required this.statistics});
 
   @override
   Widget build(BuildContext context) {
@@ -77,11 +77,11 @@ class CustomDateRangePicker extends StatelessWidget {
   final Function(DateTimeRange) onDateSelected;
 
   const CustomDateRangePicker({
-    Key? key,
+    super.key,
     this.startDate,
     this.endDate,
     required this.onDateSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
