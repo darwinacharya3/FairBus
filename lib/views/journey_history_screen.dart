@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:major_project/models/journey.dart';
+import 'package:major_project/models/daily_reports.dart';
+import 'package:major_project/services/database_service.dart';
+import 'package:major_project/widgets/amount_card.dart';
+import 'package:major_project/widgets/journey_card.dart';
 
 class JourneyHistoryScreen extends StatefulWidget {
   const JourneyHistoryScreen({super.key});
@@ -10,101 +13,13 @@ class JourneyHistoryScreen extends StatefulWidget {
 }
 
 class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
-  final FirebaseDatabase _database = FirebaseDatabase.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String _searchQuery = '';
-  
+  final DatabaseService _databaseService = DatabaseService();
+
   @override
   void initState() {
     super.initState();
-    _setupRealtimeDatabaseListener();
+    _databaseService.setupRealtimeDatabaseListener();
   }
-
-  void _setupRealtimeDatabaseListener() {
-    // Listen for new entries
-    _database.ref('bus_entries').onChildAdded.listen((event) async {
-      if (event.snapshot.value == null) return;
-
-      final rfidId = event.snapshot.key!;
-      final entryData = event.snapshot.value as Map<dynamic, dynamic>;
-
-      // Check if journey already exists in Firestore
-      final existingJourney = await _firestore
-          .collection('journey_history')
-          .where('rfid', isEqualTo: rfidId)
-          .where('entry_time', isEqualTo: entryData['entry_time'])
-          .get();
-
-      if (existingJourney.docs.isEmpty) {
-        await _storeJourneyHistory(rfidId, entryData, null);
-      }
-    });
-
-    // Listen for exits and update existing journeys
-    _database.ref('bus_exits').onChildAdded.listen((event) async {
-      if (event.snapshot.value == null) return;
-
-      final rfidId = event.snapshot.key!;
-      final exitData = event.snapshot.value as Map<dynamic, dynamic>;
-
-      // Find the active journey for this RFID
-      final activeJourney = await _firestore
-          .collection('journey_history')
-          .where('rfid', isEqualTo: rfidId)
-          .where('status', isEqualTo: 'active')
-          .get();
-
-      if (activeJourney.docs.isNotEmpty) {
-        final journeyDoc = activeJourney.docs.first;
-        await _updateJourneyWithExit(journeyDoc.id, exitData);
-      }
-    });
-  }
-
-  Future<void> _storeJourneyHistory(
-    String rfidId,
-    Map<dynamic, dynamic> entryData,
-    Map<dynamic, dynamic>? exitData,
-  ) async {
-    try {
-      await _firestore.collection('journey_history').add({
-        'rfid': rfidId,
-        'entry_time': entryData['entry_time'],
-        'start_latitude': entryData['start_latitude'],
-        'start_longitude': entryData['start_longitude'],
-        'exit_time': exitData?['exit_time'],
-        'end_latitude': exitData?['end_latitude'],
-        'end_longitude': exitData?['end_longitude'],
-        'distance': exitData?['distance'],
-        'fare': exitData?['fare'],
-        'remaining_balance': exitData?['remaining_balance'],
-        'status': exitData != null ? 'completed' : 'active',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      debugPrint('Error storing journey: $e');
-    }
-  }
-
-  Future<void> _updateJourneyWithExit(
-    String docId,
-    Map<dynamic, dynamic> exitData,
-  ) async {
-    try {
-      await _firestore.collection('journey_history').doc(docId).update({
-        'exit_time': exitData['exit_time'],
-        'end_latitude': exitData['end_latitude'],
-        'end_longitude': exitData['end_longitude'],
-        'distance': exitData['distance'],
-        'fare': exitData['fare'],
-        'remaining_balance': exitData['remaining_balance'],
-        'status': 'completed',
-      });
-    } catch (e) {
-      debugPrint('Error updating journey: $e');
-    }
-  }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -115,59 +30,83 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
       ),
       body: Column(
         children: [
-          // Search and Filter Section
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search by RFID',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+          // Amount Card
+          StreamBuilder<DailyReport>(
+            stream: _databaseService.getTodaysReport(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                debugPrint('Report Error: ${snapshot.error}');
+                return Card(
+                  margin: const EdgeInsets.all(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        const SizedBox(height: 8),
+                        Text('Error: ${snapshot.error}'),
+                      ],
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.filter_list),
-                  onPressed: () {
-                    // Show filter options
-                  },
-                ),
-              ],
-            ),
+                );
+              }
+
+              if (!snapshot.hasData) {
+                return const Card(
+                  margin: EdgeInsets.all(16),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                );
+              }
+
+              return AmountCard(report: snapshot.data!);
+            },
           ),
 
           // Journey History List
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _getFilteredStream(),
+            child: StreamBuilder<List<Journey>>(
+              stream: _databaseService.getTodaysJourneys(),
               builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  debugPrint('Journeys Error: ${snapshot.error}');
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        const SizedBox(height: 8),
+                        Text('Error: ${snapshot.error}'),
+                      ],
+                    ),
+                  );
+                }
+
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final journeys = snapshot.data!.docs;
+                final journeys = snapshot.data!;
                 
                 if (journeys.isEmpty) {
                   return const Center(
-                    child: Text('No journeys found'),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.directions_bus_outlined, size: 48, color: Colors.grey),
+                        SizedBox(height: 8),
+                        Text('No journeys today'),
+                      ],
+                    ),
                   );
                 }
 
                 return ListView.builder(
                   itemCount: journeys.length,
                   itemBuilder: (context, index) {
-                    final journey = journeys[index].data() as Map<String, dynamic>;
-                    return _buildJourneyCard(journey);
+                    return JourneyCard(journey: journeys[index]);
                   },
                 );
               },
@@ -177,126 +116,408 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
       ),
     );
   }
+}
 
-   Stream<QuerySnapshot> _getFilteredStream() {
-    var query = _firestore.collection('journey_history')
-        .orderBy('timestamp', descending: true);
-    
-    if (_searchQuery.isNotEmpty) {
-      // Create a range for RFID search
-      String searchEnd = '$_searchQuery\uf8ff';
-      query = query.where('rfid', isGreaterThanOrEqualTo: _searchQuery)
-                  .where('rfid', isLessThan: searchEnd);
-    }
-    
-    return query.limit(50).snapshots(); // Limit results for better performance
-  }
 
-  Widget _buildJourneyCard(Map<String, dynamic> journey) {
-  final bool isCompleted = journey['status'] == 'completed';
-  final String entryTime = journey['entry_time'] ?? 'N/A';
-  final String exitTime = journey['exit_time'] ?? 'N/A';
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:major_project/models/journey.dart';
+// import 'package:major_project/models/daily_reports.dart';// Make sure this path is correct
+// import 'package:major_project/services/database_service.dart';
+// import 'package:major_project/widgets/amount_card.dart';
+// import 'package:major_project/widgets/journey_card.dart';
+
+// class JourneyHistoryScreen extends StatefulWidget {
+//   const JourneyHistoryScreen({super.key});
+
+//   @override
+//   State<JourneyHistoryScreen> createState() => _JourneyHistoryScreenState();
+// }
+
+// class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
+//   final DatabaseService _databaseService = DatabaseService();
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _databaseService.setupRealtimeDatabaseListener();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Journey History'),
+//         backgroundColor: Colors.green[600],
+//       ),
+//       body: Column(
+//         children: [
+//           // Amount Card
+//           StreamBuilder<DailyReport>(
+//             stream: _databaseService.getTodaysReport(),
+//             builder: (context, snapshot) {
+//               if (snapshot.hasError) {
+//                 return const Center(child: Text('Error loading report'));
+//               }
+
+//               if (!snapshot.hasData) {
+//                 return const SizedBox(
+//                   height: 140,
+//                   child: Center(child: CircularProgressIndicator()),
+//                 );
+//               }
+
+//               return AmountCard(report: snapshot.data!);
+//             },
+//           ),
+
+//           // Journey History List
+//           Expanded(
+//             child: StreamBuilder<List<Journey>>(
+//               stream: _databaseService.getTodaysJourneys(),
+//               builder: (context, snapshot) {
+//                 if (snapshot.hasError) {
+//                   return const Center(child: Text('Error loading journeys'));
+//                 }
+
+//                 if (!snapshot.hasData) {
+//                   return const Center(child: CircularProgressIndicator());
+//                 }
+
+//                 final journeys = snapshot.data!;
+                
+//                 if (journeys.isEmpty) {
+//                   return const Center(
+//                     child: Text('No journeys today'),
+//                   );
+//                 }
+
+//                 return ListView.builder(
+//                   itemCount: journeys.length,
+//                   itemBuilder: (context, index) {
+//                     return JourneyCard(journey: journeys[index]);
+//                   },
+//                 );
+//               },
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:firebase_database/firebase_database.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+
+// class JourneyHistoryScreen extends StatefulWidget {
+//   const JourneyHistoryScreen({super.key});
+
+//   @override
+//   State<JourneyHistoryScreen> createState() => _JourneyHistoryScreenState();
+// }
+
+// class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
+//   final FirebaseDatabase _database = FirebaseDatabase.instance;
+//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+//   String _searchQuery = '';
   
-  return Card(
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    child: ExpansionTile(
-      leading: Icon(
-        isCompleted ? Icons.done_all : Icons.directions_bus,
-        color: isCompleted ? Colors.green : Colors.blue,
-      ),
-      title: Text(
-        'RFID: ${journey['rfid']}',
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Wrap(
-        spacing: 8,
-        children: [
-          Text(
-            isCompleted ? 'Completed' : 'Active Journey',
-            style: TextStyle(
-              color: isCompleted ? Colors.green : Colors.blue,
-              fontSize: 12,
-            ),
-          ),
-          Text(
-            'Entry: $entryTime',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isCompleted) ...[
-                  _buildInfoRow('Exit Time', exitTime),
-                  _buildInfoRow('Distance', '${journey['distance']} km'),
-                  _buildInfoRow('Fare', 'Rs ${journey['fare']}'),
-                  _buildInfoRow('Balance', 'Rs ${journey['remaining_balance']}'),
-                ],
-                if (journey['start_latitude'] != null) ...[
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Route Details',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width - 64, // Account for padding
-                    child: Text(
-                      'Start: ${journey['start_latitude']}, ${journey['start_longitude']}',
-                      style: TextStyle(color: Colors.grey[600]),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (isCompleted)
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width - 64,
-                      child: Text(
-                        'End: ${journey['end_latitude']}, ${journey['end_longitude']}',
-                        style: TextStyle(color: Colors.grey[600]),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
+//   @override
+//   void initState() {
+//     super.initState();
+//     _setupRealtimeDatabaseListener();
+//   }
 
-Widget _buildInfoRow(String label, String value) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(value),
-      ],
-    ),
-  );
-}
-}
+//   void _setupRealtimeDatabaseListener() {
+//     // Listen for new entries
+//     _database.ref('bus_entries').onChildAdded.listen((event) async {
+//       if (event.snapshot.value == null) return;
+
+//       final rfidId = event.snapshot.key!;
+//       final entryData = event.snapshot.value as Map<dynamic, dynamic>;
+
+//       // Check if journey already exists in Firestore
+//       final existingJourney = await _firestore
+//           .collection('journey_history')
+//           .where('rfid', isEqualTo: rfidId)
+//           .where('entry_time', isEqualTo: entryData['entry_time'])
+//           .get();
+
+//       if (existingJourney.docs.isEmpty) {
+//         await _storeJourneyHistory(rfidId, entryData, null);
+//       }
+//     });
+
+//     // Listen for exits and update existing journeys
+//     _database.ref('bus_exits').onChildAdded.listen((event) async {
+//       if (event.snapshot.value == null) return;
+
+//       final rfidId = event.snapshot.key!;
+//       final exitData = event.snapshot.value as Map<dynamic, dynamic>;
+
+//       // Find the active journey for this RFID
+//       final activeJourney = await _firestore
+//           .collection('journey_history')
+//           .where('rfid', isEqualTo: rfidId)
+//           .where('status', isEqualTo: 'active')
+//           .get();
+
+//       if (activeJourney.docs.isNotEmpty) {
+//         final journeyDoc = activeJourney.docs.first;
+//         await _updateJourneyWithExit(journeyDoc.id, exitData);
+//       }
+//     });
+//   }
+
+//   Future<void> _storeJourneyHistory(
+//     String rfidId,
+//     Map<dynamic, dynamic> entryData,
+//     Map<dynamic, dynamic>? exitData,
+//   ) async {
+//     try {
+//       await _firestore.collection('journey_history').add({
+//         'rfid': rfidId,
+//         'entry_time': entryData['entry_time'],
+//         'start_latitude': entryData['start_latitude'],
+//         'start_longitude': entryData['start_longitude'],
+//         'exit_time': exitData?['exit_time'],
+//         'end_latitude': exitData?['end_latitude'],
+//         'end_longitude': exitData?['end_longitude'],
+//         'distance': exitData?['distance'],
+//         'fare': exitData?['fare'],
+//         'remaining_balance': exitData?['remaining_balance'],
+//         'status': exitData != null ? 'completed' : 'active',
+//         'timestamp': FieldValue.serverTimestamp(),
+//       });
+//     } catch (e) {
+//       debugPrint('Error storing journey: $e');
+//     }
+//   }
+
+//   Future<void> _updateJourneyWithExit(
+//     String docId,
+//     Map<dynamic, dynamic> exitData,
+//   ) async {
+//     try {
+//       await _firestore.collection('journey_history').doc(docId).update({
+//         'exit_time': exitData['exit_time'],
+//         'end_latitude': exitData['end_latitude'],
+//         'end_longitude': exitData['end_longitude'],
+//         'distance': exitData['distance'],
+//         'fare': exitData['fare'],
+//         'remaining_balance': exitData['remaining_balance'],
+//         'status': 'completed',
+//       });
+//     } catch (e) {
+//       debugPrint('Error updating journey: $e');
+//     }
+//   }
+  
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Journey History'),
+//         backgroundColor: Colors.green[600],
+//       ),
+//       body: Column(
+//         children: [
+//           // Search and Filter Section
+//           Padding(
+//             padding: const EdgeInsets.all(16.0),
+//             child: Row(
+//               children: [
+//                 Expanded(
+//                   child: TextField(
+//                     decoration: InputDecoration(
+//                       hintText: 'Search by RFID',
+//                       prefixIcon: const Icon(Icons.search),
+//                       border: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(8),
+//                       ),
+//                     ),
+//                     onChanged: (value) {
+//                       setState(() {
+//                         _searchQuery = value;
+//                       });
+//                     },
+//                   ),
+//                 ),
+//                 IconButton(
+//                   icon: const Icon(Icons.filter_list),
+//                   onPressed: () {
+//                     // Show filter options
+//                   },
+//                 ),
+//               ],
+//             ),
+//           ),
+
+//           // Journey History List
+//           Expanded(
+//             child: StreamBuilder<QuerySnapshot>(
+//               stream: _getFilteredStream(),
+//               builder: (context, snapshot) {
+//                 if (!snapshot.hasData) {
+//                   return const Center(child: CircularProgressIndicator());
+//                 }
+
+//                 final journeys = snapshot.data!.docs;
+                
+//                 if (journeys.isEmpty) {
+//                   return const Center(
+//                     child: Text('No journeys found'),
+//                   );
+//                 }
+
+//                 return ListView.builder(
+//                   itemCount: journeys.length,
+//                   itemBuilder: (context, index) {
+//                     final journey = journeys[index].data() as Map<String, dynamic>;
+//                     return _buildJourneyCard(journey);
+//                   },
+//                 );
+//               },
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//    Stream<QuerySnapshot> _getFilteredStream() {
+//     var query = _firestore.collection('journey_history')
+//         .orderBy('timestamp', descending: true);
+    
+//     if (_searchQuery.isNotEmpty) {
+//       // Create a range for RFID search
+//       String searchEnd = '$_searchQuery\uf8ff';
+//       query = query.where('rfid', isGreaterThanOrEqualTo: _searchQuery)
+//                   .where('rfid', isLessThan: searchEnd);
+//     }
+    
+//     return query.limit(50).snapshots(); // Limit results for better performance
+//   }
+
+//   Widget _buildJourneyCard(Map<String, dynamic> journey) {
+//   final bool isCompleted = journey['status'] == 'completed';
+//   final String entryTime = journey['entry_time'] ?? 'N/A';
+//   final String exitTime = journey['exit_time'] ?? 'N/A';
+  
+//   return Card(
+//     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//     child: ExpansionTile(
+//       leading: Icon(
+//         isCompleted ? Icons.done_all : Icons.directions_bus,
+//         color: isCompleted ? Colors.green : Colors.blue,
+//       ),
+//       title: Text(
+//         'RFID: ${journey['rfid']}',
+//         overflow: TextOverflow.ellipsis,
+//       ),
+//       subtitle: Wrap(
+//         spacing: 8,
+//         children: [
+//           Text(
+//             isCompleted ? 'Completed' : 'Active Journey',
+//             style: TextStyle(
+//               color: isCompleted ? Colors.green : Colors.blue,
+//               fontSize: 12,
+//             ),
+//           ),
+//           Text(
+//             'Entry: $entryTime',
+//             style: TextStyle(
+//               color: Colors.grey[600],
+//               fontSize: 12,
+//             ),
+//           ),
+//         ],
+//       ),
+//       children: [
+//         SingleChildScrollView(
+//           scrollDirection: Axis.horizontal,
+//           child: Padding(
+//             padding: const EdgeInsets.all(16.0),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 if (isCompleted) ...[
+//                   _buildInfoRow('Exit Time', exitTime),
+//                   _buildInfoRow('Distance', '${journey['distance']} km'),
+//                   _buildInfoRow('Fare', 'Rs ${journey['fare']}'),
+//                   _buildInfoRow('Balance', 'Rs ${journey['remaining_balance']}'),
+//                 ],
+//                 if (journey['start_latitude'] != null) ...[
+//                   const SizedBox(height: 8),
+//                   const Text(
+//                     'Route Details',
+//                     style: TextStyle(
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                   const SizedBox(height: 4),
+//                   SizedBox(
+//                     width: MediaQuery.of(context).size.width - 64, // Account for padding
+//                     child: Text(
+//                       'Start: ${journey['start_latitude']}, ${journey['start_longitude']}',
+//                       style: TextStyle(color: Colors.grey[600]),
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                   ),
+//                   if (isCompleted)
+//                     SizedBox(
+//                       width: MediaQuery.of(context).size.width - 64,
+//                       child: Text(
+//                         'End: ${journey['end_latitude']}, ${journey['end_longitude']}',
+//                         style: TextStyle(color: Colors.grey[600]),
+//                         overflow: TextOverflow.ellipsis,
+//                       ),
+//                     ),
+//                 ],
+//               ],
+//             ),
+//           ),
+//         ),
+//       ],
+//     ),
+//   );
+// }
+
+// Widget _buildInfoRow(String label, String value) {
+//   return Padding(
+//     padding: const EdgeInsets.symmetric(vertical: 4),
+//     child: Row(
+//       mainAxisSize: MainAxisSize.min,
+//       children: [
+//         Text(
+//           label,
+//           style: const TextStyle(
+//             fontWeight: FontWeight.w500,
+//           ),
+//         ),
+//         const SizedBox(width: 8),
+//         Text(value),
+//       ],
+//     ),
+//   );
+// }
+// }
 
 
 

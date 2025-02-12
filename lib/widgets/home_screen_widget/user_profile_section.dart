@@ -38,7 +38,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
   Future<void> _loadUserData() async {
     setState(() {
       _isLoading = true;
-      _isError = false;
+      // _isError = false;
       _errorMessage = "";
     });
 
