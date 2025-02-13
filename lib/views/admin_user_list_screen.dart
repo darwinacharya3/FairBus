@@ -162,7 +162,7 @@ class AdminUserListScreen extends StatelessWidget {
                           sortedUsers[index].data() as Map<String, dynamic>;
                       var userId = sortedUsers[index].id;
 
-                      bool isVerified = userData['isVerified'] ?? false;
+                      // bool isVerified = userData['isVerified'] ?? false;
                       String verificationStatus =
                           userData['verificationStatus'] ?? 'pending';
 

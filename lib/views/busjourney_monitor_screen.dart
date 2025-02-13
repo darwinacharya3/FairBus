@@ -221,8 +221,11 @@ class BusJourneyMonitorScreen extends StatelessWidget {
 
 
 
+
 // import 'package:flutter/material.dart';
 // import 'package:firebase_database/firebase_database.dart';
+// // import 'package:get/get.dart';
+// // import 'package:intl/intl.dart';
 
 // class BusJourneyMonitorScreen extends StatelessWidget {
 //   final FirebaseDatabase _database = FirebaseDatabase.instance;
@@ -233,59 +236,95 @@ class BusJourneyMonitorScreen extends StatelessWidget {
 //   Widget build(BuildContext context) {
 //     return Scaffold(
 //       appBar: AppBar(
-//         title: const Text('Live Journey Monitor'),
+//         title: const Text('Bus Journey Monitor'),
 //         backgroundColor: Colors.green[600],
 //       ),
-//       body: StreamBuilder(
-//         stream: _database.ref('bus_entries').onValue,
-//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-//           if (!snapshot.hasData) {
-//             return const Center(child: CircularProgressIndicator());
-//           }
-
-//           final Map<dynamic, dynamic>? entries = 
-//             snapshot.data?.snapshot.value as Map?;
-          
-//           if (entries == null || entries.isEmpty) {
-//             return const Center(
-//               child: Column(
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 children: [
-//                   Icon(Icons.directions_bus_outlined, 
-//                     size: 64, 
-//                     color: Colors.grey
-//                   ),
-//                   SizedBox(height: 16),
-//                   Text(
-//                     'No Active Journeys',
-//                     style: TextStyle(
-//                       fontSize: 18,
-//                       color: Colors.grey,
+//       body: Column(
+//         children: [
+//           // Stats Cards
+//           Padding(
+//             padding: const EdgeInsets.all(16.0),
+//             child: Row(
+//               children: [
+//                 Expanded(
+//                   child: _buildStatsCard(
+//                     'Active Journeys',
+//                     StreamBuilder(
+//                       stream: _database.ref('bus_entries').onValue,
+//                       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//                         if (!snapshot.hasData) return const Text('...');
+//                         final Map<dynamic, dynamic>? entries = 
+//                           snapshot.data?.snapshot.value as Map?;
+//                         return Text(
+//                           '${entries?.length ?? 0}',
+//                           style: const TextStyle(
+//                             fontSize: 24,
+//                             fontWeight: FontWeight.bold,
+//                           ),
+//                         );
+//                       },
 //                     ),
+//                     Icons.directions_bus,
 //                   ),
-//                 ],
-//               ),
-//             );
-//           }
+//                 ),
+//                 const SizedBox(width: 16),
+//                 Expanded(
+//                   child: _buildStatsCard(
+//                     'Today\'s Revenue',
+//                     StreamBuilder(
+//                       stream: _database.ref('bus_exits').onValue,
+//                       builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//                         if (!snapshot.hasData) return const Text('...');
+//                         final Map<dynamic, dynamic>? exits = 
+//                           snapshot.data?.snapshot.value as Map?;
+//                         double totalRevenue = 0;
+//                         exits?.forEach((key, value) {
+//                           if (value['exit_time'].toString().startsWith('2025-2-9')) {
+//                             totalRevenue += (value['fare'] ?? 0).toDouble();
+//                           }
+//                         });
+//                         return Text(
+//                           'Rs ${totalRevenue.toStringAsFixed(2)}',
+//                           style: const TextStyle(
+//                             fontSize: 24,
+//                             fontWeight: FontWeight.bold,
+//                           ),
+//                         );
+//                       },
+//                     ),
+//                     Icons.attach_money,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
 
-//           // Sort entries by time (newest first)
-//           final List<MapEntry<dynamic, dynamic>> sortedEntries = 
-//             entries.entries.toList()
-//               ..sort((a, b) {
-//                 final timeA = a.value['entry_time'] as String;
-//                 final timeB = b.value['entry_time'] as String;
-//                 return timeB.compareTo(timeA);
-//               });
+//           // Real-time Journey List
+//           Expanded(
+//             child: StreamBuilder(
+//               stream: _database.ref('bus_entries').onValue,
+//               builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//                 if (!snapshot.hasData) {
+//                   return const Center(child: CircularProgressIndicator());
+//                 }
 
-//           return ListView.builder(
-//             padding: const EdgeInsets.all(16),
-//             itemCount: sortedEntries.length,
-//             itemBuilder: (context, index) {
-//               final entry = sortedEntries[index];
-//               return _buildJourneyCard(entry.key, entry.value);
-//             },
-//           );
-//         },
+//                 final Map<dynamic, dynamic>? entries = 
+//                   snapshot.data?.snapshot.value as Map?;
+//                 if (entries == null) {
+//                   return const Center(child: Text('No active journeys'));
+//                 }
+
+//                 return ListView.builder(
+//                   itemCount: entries.length,
+//                   itemBuilder: (context, index) {
+//                     final entry = entries.entries.elementAt(index);
+//                     return _buildJourneyCard(entry.key, entry.value);
+//                   },
+//                 );
+//               },
+//             ),
+//           ),
+//         ],
 //       ),
 //       floatingActionButton: FloatingActionButton(
 //         onPressed: () {
@@ -294,376 +333,6 @@ class BusJourneyMonitorScreen extends StatelessWidget {
 //         },
 //         backgroundColor: Colors.green,
 //         child: const Icon(Icons.refresh),
-//       ),
-//     );
-//   }
-
-//   Widget _buildJourneyCard(String rfidId, Map<dynamic, dynamic> journeyData) {
-//     return Card(
-//       elevation: 2,
-//       margin: const EdgeInsets.only(bottom: 12),
-//       child: StreamBuilder(
-//         stream: _database.ref('bus_exits/$rfidId').onValue,
-//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-//           final exitData = snapshot.data?.snapshot.value as Map?;
-          
-//           return Container(
-//             decoration: BoxDecoration(
-//               borderRadius: BorderRadius.circular(8),
-//               border: Border.all(
-//                 color: exitData == null ? Colors.blue.shade200 : Colors.green.shade200,
-//                 width: 1,
-//               ),
-//             ),
-//             child: ListTile(
-//               contentPadding: const EdgeInsets.all(16),
-//               leading: Container(
-//                 padding: const EdgeInsets.all(8),
-//                 decoration: BoxDecoration(
-//                   color: exitData == null 
-//                     ? Colors.blue.shade50 
-//                     : Colors.green.shade50,
-//                   borderRadius: BorderRadius.circular(8),
-//                 ),
-//                 child: Icon(
-//                   exitData == null ? Icons.directions_bus : Icons.done_all,
-//                   color: exitData == null ? Colors.blue : Colors.green,
-//                   size: 32,
-//                 ),
-//               ),
-//               title: Row(
-//                 children: [
-//                   Text(
-//                     'RFID: $rfidId',
-//                     style: const TextStyle(
-//                       fontWeight: FontWeight.bold,
-//                       fontSize: 16,
-//                     ),
-//                   ),
-//                   const Spacer(),
-//                   Container(
-//                     padding: const EdgeInsets.symmetric(
-//                       horizontal: 12,
-//                       vertical: 6,
-//                     ),
-//                     decoration: BoxDecoration(
-//                       color: exitData == null 
-//                         ? Colors.blue.shade50 
-//                         : Colors.green.shade50,
-//                       borderRadius: BorderRadius.circular(16),
-//                     ),
-//                     child: Text(
-//                       exitData == null ? 'In Progress' : 'Completed',
-//                       style: TextStyle(
-//                         color: exitData == null 
-//                           ? Colors.blue.shade700 
-//                           : Colors.green.shade700,
-//                         fontWeight: FontWeight.w500,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//               subtitle: Column(
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   const SizedBox(height: 12),
-//                   Row(
-//                     children: [
-//                       const Icon(Icons.access_time, size: 16),
-//                       const SizedBox(width: 8),
-//                       Text(
-//                         'Entry: ${journeyData['entry_time']}',
-//                         style: const TextStyle(fontSize: 15),
-//                       ),
-//                     ],
-//                   ),
-//                   if (exitData != null) ...[
-//                     const SizedBox(height: 8),
-//                     Row(
-//                       children: [
-//                         const Icon(Icons.logout, size: 16),
-//                         const SizedBox(width: 8),
-//                         Text(
-//                           'Exit: ${exitData['exit_time']}',
-//                           style: const TextStyle(fontSize: 15),
-//                         ),
-//                       ],
-//                     ),
-//                     const SizedBox(height: 8),
-//                     Row(
-//                       children: [
-//                         const Icon(Icons.route, size: 16),
-//                         const SizedBox(width: 8),
-//                         Text(
-//                           'Distance: ${exitData['distance']} km',
-//                           style: const TextStyle(fontSize: 15),
-//                         ),
-//                       ],
-//                     ),
-//                   ],
-//                 ],
-//               ),
-//             ),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
-
-
-
-
-
-
-
-
-// import 'package:flutter/material.dart';
-// import 'package:firebase_database/firebase_database.dart';
-// import 'package:intl/intl.dart';
-// import 'package:major_project/widgets/bus_revenue_tracker.dart';
-
-// class BusJourneyMonitorScreen extends StatefulWidget {
-//   const BusJourneyMonitorScreen({super.key});
-
-//   @override
-//   State<BusJourneyMonitorScreen> createState() => _BusJourneyMonitorScreenState();
-// }
-
-// class _BusJourneyMonitorScreenState extends State<BusJourneyMonitorScreen> with SingleTickerProviderStateMixin {
-//   final FirebaseDatabase _database = FirebaseDatabase.instance;
-//   final RevenueTracking _revenueTracking = RevenueTracking();
-//   late TabController _tabController;
-  
-//   @override
-//   void initState() {
-//     super.initState();
-//     // _tabController = TabController(length: 2, vsync: this);
-//     // _initializeDailyRevenue();
-//      _database.ref('bus_exits').onChildAdded.listen((event) {
-//       if (event.snapshot.value != null) {
-//         final exitData = event.snapshot.value as Map<dynamic, dynamic>;
-//         final double fare = (exitData['fare'] ?? 0).toDouble();
-//         if (fare > 0) {
-//           _revenueTracking.updateDailyRevenue(fare);
-//         }
-//       }});
-//   }
-
-//   @override
-//   void dispose() {
-//     _tabController.dispose();
-//     super.dispose();
-//   }
-
-//   // Helper method to get date keys
-//   String _getDayKey([DateTime? date]) {
-//     date ??= DateTime.now();
-//     return DateFormat('yyyy-MM-dd').format(date);
-//   }
-
-//   // String _getMonthKey([DateTime? date]) {
-//   //   date ??= DateTime.now();
-//   //   return DateFormat('yyyy-MM').format(date);
-//   // }
-
-//   // // Initialize daily revenue if not exists
-//   // Future<void> _initializeDailyRevenue() async {
-//   //   final String dayKey = _getDayKey();
-//   //   final dailyRef = _database.ref('revenue_history/daily/$dayKey');
-    
-//   //   final snapshot = await dailyRef.get();
-//   //   if (!snapshot.exists) {
-//   //     await dailyRef.set({
-//   //       'total': 0.0,
-//   //       'transactions': 0,
-//   //       'last_updated': ServerValue.timestamp,
-//   //     });
-//   //   }
-//   // }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Bus Journey Monitor'),
-//         backgroundColor: Colors.green[600],
-//         bottom: TabBar(
-//           controller: _tabController,
-//           tabs: const [
-//             Tab(text: 'Active Journeys'),
-//             Tab(text: 'Revenue History'),
-//           ],
-//         ),
-//       ),
-//       body: TabBarView(
-//         controller: _tabController,
-//         children: [
-//           _buildActiveJourneysTab(),
-//           _buildRevenueHistoryTab(),
-//         ],
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: () {
-//           _database.ref().get();
-//         },
-//         backgroundColor: Colors.green,
-//         child: const Icon(Icons.refresh),
-//       ),
-//     );
-//   }
-
-//   Widget _buildActiveJourneysTab() {
-//     return Column(
-//       children: [
-//         // Stats Cards
-//         Padding(
-//           padding: const EdgeInsets.all(16.0),
-//           child: Row(
-//             children: [
-//               Expanded(
-//                 child: _buildStatsCard(
-//                   'Active Journeys',
-//                   StreamBuilder(
-//                     stream: _database.ref('bus_entries').onValue,
-//                     builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-//                       if (!snapshot.hasData) return const Text('...');
-//                       final Map<dynamic, dynamic>? entries = 
-//                         snapshot.data?.snapshot.value as Map?;
-//                       return Text(
-//                         '${entries?.length ?? 0}',
-//                         style: const TextStyle(
-//                           fontSize: 24,
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       );
-//                     },
-//                   ),
-//                   Icons.directions_bus,
-//                 ),
-//               ),
-//               const SizedBox(width: 16),
-//               Expanded(
-//                 child: _buildStatsCard(
-//                   'Today\'s Revenue',
-//                   StreamBuilder(
-//                     stream: _database.ref('revenue_history/daily/${_getDayKey()}/total').onValue,
-//                     builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-//                       if (!snapshot.hasData) return const Text('...');
-//                       final double revenue = (snapshot.data?.snapshot.value ?? 0).toDouble();
-//                       return Text(
-//                         'Rs ${revenue.toStringAsFixed(2)}',
-//                         style: const TextStyle(
-//                           fontSize: 24,
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       );
-//                     },
-//                   ),
-//                   Icons.attach_money,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ),
-
-//         // Journey List
-//         Expanded(
-//           child: StreamBuilder(
-//             stream: _database.ref('bus_entries').onValue,
-//             builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-//               if (!snapshot.hasData) {
-//                 return const Center(child: CircularProgressIndicator());
-//               }
-
-//               final Map<dynamic, dynamic>? entries = 
-//                 snapshot.data?.snapshot.value as Map?;
-//               if (entries == null) {
-//                 return const Center(child: Text('No active journeys'));
-//               }
-
-//               return ListView.builder(
-//                 itemCount: entries.length,
-//                 itemBuilder: (context, index) {
-//                   final entry = entries.entries.elementAt(index);
-//                   return _buildJourneyCard(entry.key, entry.value);
-//                 },
-//               );
-//             },
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-
-//   Widget _buildRevenueHistoryTab() {
-//     return SingleChildScrollView(
-//       child: Column(
-//         children: [
-//           _buildRevenueHistorySection('Daily Revenue', 'daily'),
-//           _buildRevenueHistorySection('Monthly Revenue', 'monthly'),
-//         ],
-//       ),
-//     );
-//   }
-
-//   Widget _buildRevenueHistorySection(String title, String period) {
-//     return Card(
-//       margin: const EdgeInsets.all(16),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Padding(
-//             padding: const EdgeInsets.all(16),
-//             child: Text(
-//               title,
-//               style: const TextStyle(
-//                 fontSize: 18,
-//                 fontWeight: FontWeight.bold,
-//               ),
-//             ),
-//           ),
-//           StreamBuilder(
-//             stream: _database.ref('revenue_history/$period').limitToLast(7).onValue,
-//             builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-//               if (!snapshot.hasData) {
-//                 return const Center(child: CircularProgressIndicator());
-//               }
-
-//               final data = snapshot.data?.snapshot.value as Map<dynamic, dynamic>?;
-//               if (data == null || data.isEmpty) {
-//                 return const Padding(
-//                   padding: EdgeInsets.all(16),
-//                   child: Text('No data available'),
-//                 );
-//               }
-
-//               return ListView.builder(
-//                 shrinkWrap: true,
-//                 physics: const NeverScrollableScrollPhysics(),
-//                 itemCount: data.length,
-//                 itemBuilder: (context, index) {
-//                   final entry = data.entries.elementAt(index);
-//                   return ListTile(
-//                     title: Text(entry.key),
-//                     subtitle: Text(
-//                       'Total: Rs ${(entry.value['total'] ?? 0).toStringAsFixed(2)}\n'
-//                       'Transactions: ${entry.value['transactions'] ?? 0}'
-//                     ),
-//                     trailing: Text(
-//                       DateFormat('MMM d').format(
-//                         DateTime.fromMillisecondsSinceEpoch(
-//                           entry.value['last_updated'] ?? 0
-//                         )
-//                       ),
-//                     ),
-//                   );
-//                 },
-//               );
-//             },
-//           ),
-//         ],
 //       ),
 //     );
 //   }
@@ -926,3 +595,451 @@ class BusJourneyMonitorScreen extends StatelessWidget {
 //     );
 //   }
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:firebase_database/firebase_database.dart';
+
+// class BusJourneyMonitorScreen extends StatelessWidget {
+//   final FirebaseDatabase _database = FirebaseDatabase.instance;
+  
+//   BusJourneyMonitorScreen({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Live Journey Monitor'),
+//         backgroundColor: Colors.green[600],
+//       ),
+//       body: StreamBuilder(
+//         stream: _database.ref('bus_entries').onValue,
+//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//           if (!snapshot.hasData) {
+//             return const Center(child: CircularProgressIndicator());
+//           }
+
+//           final Map<dynamic, dynamic>? entries = 
+//             snapshot.data?.snapshot.value as Map?;
+          
+//           if (entries == null || entries.isEmpty) {
+//             return const Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   Icon(Icons.directions_bus_outlined, 
+//                     size: 64, 
+//                     color: Colors.grey
+//                   ),
+//                   SizedBox(height: 16),
+//                   Text(
+//                     'No Active Journeys',
+//                     style: TextStyle(
+//                       fontSize: 18,
+//                       color: Colors.grey,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           }
+
+//           final List<MapEntry<dynamic, dynamic>> sortedEntries = 
+//             entries.entries.toList()
+//               ..sort((a, b) {
+//                 final timeA = a.value['entry_time'] as String;
+//                 final timeB = b.value['entry_time'] as String;
+//                 return timeB.compareTo(timeA);
+//               });
+
+//           return ListView.builder(
+//             padding: const EdgeInsets.all(16),
+//             itemCount: sortedEntries.length,
+//             itemBuilder: (context, index) {
+//               final entry = sortedEntries[index];
+//               return _buildJourneyCard(entry.key, entry.value);
+//             },
+//           );
+//         },
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () {
+//           _database.ref().get();
+//         },
+//         backgroundColor: Colors.green,
+//         child: const Icon(Icons.refresh),
+//       ),
+//     );
+//   }
+
+//   Widget _buildJourneyCard(String rfidId, Map<dynamic, dynamic> journeyData) {
+//     return Card(
+//       elevation: 2,
+//       margin: const EdgeInsets.only(bottom: 12),
+//       child: StreamBuilder(
+//         stream: _database.ref('bus_exits/$rfidId').onValue,
+//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//           final exitData = snapshot.data?.snapshot.value as Map?;
+          
+//           return Container(
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(8),
+//               border: Border.all(
+//                 color: exitData == null ? Colors.blue.shade200 : Colors.green.shade200,
+//                 width: 1,
+//               ),
+//             ),
+//             child: Padding(
+//               padding: const EdgeInsets.all(12),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Header Row with Status
+//                   Row(
+//                     children: [
+//                       Container(
+//                         padding: const EdgeInsets.all(8),
+//                         decoration: BoxDecoration(
+//                           color: exitData == null 
+//                             ? Colors.blue.shade50 
+//                             : Colors.green.shade50,
+//                           borderRadius: BorderRadius.circular(8),
+//                         ),
+//                         child: Icon(
+//                           exitData == null ? Icons.directions_bus : Icons.done_all,
+//                           color: exitData == null ? Colors.blue : Colors.green,
+//                           size: 24,
+//                         ),
+//                       ),
+//                       const SizedBox(width: 12),
+//                       Expanded(
+//                         child: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Text(
+//                               'RFID: $rfidId',
+//                               style: const TextStyle(
+//                                 fontWeight: FontWeight.bold,
+//                                 fontSize: 14,
+//                               ),
+//                               overflow: TextOverflow.ellipsis,
+//                             ),
+//                             const SizedBox(height: 4),
+//                             Container(
+//                               padding: const EdgeInsets.symmetric(
+//                                 horizontal: 8,
+//                                 vertical: 4,
+//                               ),
+//                               decoration: BoxDecoration(
+//                                 color: exitData == null 
+//                                   ? Colors.blue.shade50 
+//                                   : Colors.green.shade50,
+//                                 borderRadius: BorderRadius.circular(12),
+//                               ),
+//                               child: Text(
+//                                 exitData == null ? 'In Progress' : 'Completed',
+//                                 style: TextStyle(
+//                                   color: exitData == null 
+//                                     ? Colors.blue.shade700 
+//                                     : Colors.green.shade700,
+//                                   fontSize: 12,
+//                                   fontWeight: FontWeight.w500,
+//                                 ),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 12),
+//                   // Journey Details
+//                   Row(
+//                     children: [
+//                       const Icon(Icons.access_time, size: 14),
+//                       const SizedBox(width: 8),
+//                       Expanded(
+//                         child: Text(
+//                           'Entry: ${journeyData['entry_time']}',
+//                           style: const TextStyle(fontSize: 13),
+//                           overflow: TextOverflow.ellipsis,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   if (exitData != null) ...[
+//                     const SizedBox(height: 8),
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.logout, size: 14),
+//                         const SizedBox(width: 8),
+//                         Expanded(
+//                           child: Text(
+//                             'Exit: ${exitData['exit_time']}',
+//                             style: const TextStyle(fontSize: 13),
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.route, size: 14),
+//                         const SizedBox(width: 8),
+//                         Expanded(
+//                           child: Text(
+//                             'Distance: ${exitData['distance']} km',
+//                             style: const TextStyle(fontSize: 13),
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 ],
+//               ),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:firebase_database/firebase_database.dart';
+
+// class BusJourneyMonitorScreen extends StatelessWidget {
+//   final FirebaseDatabase _database = FirebaseDatabase.instance;
+  
+//   BusJourneyMonitorScreen({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Live Journey Monitor'),
+//         backgroundColor: Colors.green[600],
+//       ),
+//       body: StreamBuilder(
+//         stream: _database.ref('bus_entries').onValue,
+//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//           if (!snapshot.hasData) {
+//             return const Center(child: CircularProgressIndicator());
+//           }
+
+//           final Map<dynamic, dynamic>? entries = 
+//             snapshot.data?.snapshot.value as Map?;
+          
+//           if (entries == null || entries.isEmpty) {
+//             return const Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   Icon(Icons.directions_bus_outlined, 
+//                     size: 64, 
+//                     color: Colors.grey
+//                   ),
+//                   SizedBox(height: 16),
+//                   Text(
+//                     'No Active Journeys',
+//                     style: TextStyle(
+//                       fontSize: 18,
+//                       color: Colors.grey,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           }
+
+//           // Sort entries by time (newest first)
+//           final List<MapEntry<dynamic, dynamic>> sortedEntries = 
+//             entries.entries.toList()
+//               ..sort((a, b) {
+//                 final timeA = a.value['entry_time'] as String;
+//                 final timeB = b.value['entry_time'] as String;
+//                 return timeB.compareTo(timeA);
+//               });
+
+//           return ListView.builder(
+//             padding: const EdgeInsets.all(16),
+//             itemCount: sortedEntries.length,
+//             itemBuilder: (context, index) {
+//               final entry = sortedEntries[index];
+//               return _buildJourneyCard(entry.key, entry.value);
+//             },
+//           );
+//         },
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () {
+//           // Refresh data
+//           _database.ref().get();
+//         },
+//         backgroundColor: Colors.green,
+//         child: const Icon(Icons.refresh),
+//       ),
+//     );
+//   }
+
+//   Widget _buildJourneyCard(String rfidId, Map<dynamic, dynamic> journeyData) {
+//     return Card(
+//       elevation: 2,
+//       margin: const EdgeInsets.only(bottom: 12),
+//       child: StreamBuilder(
+//         stream: _database.ref('bus_exits/$rfidId').onValue,
+//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//           final exitData = snapshot.data?.snapshot.value as Map?;
+          
+//           return Container(
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(8),
+//               border: Border.all(
+//                 color: exitData == null ? Colors.blue.shade200 : Colors.green.shade200,
+//                 width: 1,
+//               ),
+//             ),
+//             child: ListTile(
+//               contentPadding: const EdgeInsets.all(16),
+//               leading: Container(
+//                 padding: const EdgeInsets.all(8),
+//                 decoration: BoxDecoration(
+//                   color: exitData == null 
+//                     ? Colors.blue.shade50 
+//                     : Colors.green.shade50,
+//                   borderRadius: BorderRadius.circular(8),
+//                 ),
+//                 child: Icon(
+//                   exitData == null ? Icons.directions_bus : Icons.done_all,
+//                   color: exitData == null ? Colors.blue : Colors.green,
+//                   size: 32,
+//                 ),
+//               ),
+//               title: Row(
+//                 children: [
+//                   Text(
+//                     'RFID: $rfidId',
+//                     style: const TextStyle(
+//                       fontWeight: FontWeight.bold,
+//                       fontSize: 16,
+//                     ),
+//                   ),
+//                   const Spacer(),
+//                   Container(
+//                     padding: const EdgeInsets.symmetric(
+//                       horizontal: 12,
+//                       vertical: 6,
+//                     ),
+//                     decoration: BoxDecoration(
+//                       color: exitData == null 
+//                         ? Colors.blue.shade50 
+//                         : Colors.green.shade50,
+//                       borderRadius: BorderRadius.circular(16),
+//                     ),
+//                     child: Text(
+//                       exitData == null ? 'In Progress' : 'Completed',
+//                       style: TextStyle(
+//                         color: exitData == null 
+//                           ? Colors.blue.shade700 
+//                           : Colors.green.shade700,
+//                         fontWeight: FontWeight.w500,
+//                       ),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//               subtitle: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const SizedBox(height: 12),
+//                   Row(
+//                     children: [
+//                       const Icon(Icons.access_time, size: 16),
+//                       const SizedBox(width: 8),
+//                       Text(
+//                         'Entry: ${journeyData['entry_time']}',
+//                         style: const TextStyle(fontSize: 15),
+//                       ),
+//                     ],
+//                   ),
+//                   if (exitData != null) ...[
+//                     const SizedBox(height: 8),
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.logout, size: 16),
+//                         const SizedBox(width: 8),
+//                         Text(
+//                           'Exit: ${exitData['exit_time']}',
+//                           style: const TextStyle(fontSize: 15),
+//                         ),
+//                       ],
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.route, size: 16),
+//                         const SizedBox(width: 8),
+//                         Text(
+//                           'Distance: ${exitData['distance']} km',
+//                           style: const TextStyle(fontSize: 15),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 ],
+//               ),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

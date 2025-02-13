@@ -23,8 +23,8 @@ class _UserProfileSectionState extends State<UserProfileSection> {
   String _username = "";
   String _profileImageUrl = "";
   bool _isLoading = false;
-  bool _isError = false;
-  String _errorMessage = "";
+  // bool _isError = false;
+  // String _errorMessage = "";
   
   bool _isVerified = false;
   String _verificationStatus = 'pending';
@@ -39,7 +39,7 @@ class _UserProfileSectionState extends State<UserProfileSection> {
     setState(() {
       _isLoading = true;
       // _isError = false;
-      _errorMessage = "";
+      // _errorMessage = "";
     });
 
     try {
@@ -72,8 +72,8 @@ class _UserProfileSectionState extends State<UserProfileSection> {
     } catch (e) {
       // print("Error in _loadUserData: $e");
       setState(() {
-        _isError = true;
-        _errorMessage = e.toString();
+        // _isError = true;
+        // _errorMessage = e.toString();
         _username = "User";
         _profileImageUrl = "";
         
@@ -111,8 +111,8 @@ class _UserProfileSectionState extends State<UserProfileSection> {
 
           setState(() {
             _profileImageUrl = cloudinaryUrl;
-            _isError = false;
-            _errorMessage = "";
+            // _isError = false;
+            // _errorMessage = "";
           });
 
           Get.snackbar(

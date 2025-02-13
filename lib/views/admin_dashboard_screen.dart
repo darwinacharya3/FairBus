@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:major_project/controller/auth_controller.dart';
 import 'package:major_project/views/admin_user_list_screen.dart';
+import 'package:major_project/views/report_screen.dart';
 
 
 class AdminDashboardScreen extends StatelessWidget {
@@ -29,7 +30,7 @@ class AdminDashboardScreen extends StatelessWidget {
         'verifiedUsers': verifiedUsers,
       };
     } catch (e) {
-      print('Error getting dashboard stats: $e');
+      // print('Error getting dashboard stats: $e');
       return {
         'totalUsers': 0,
         'pendingVerifications': 0,
@@ -275,13 +276,9 @@ class AdminDashboardScreen extends StatelessWidget {
                         'View system reports',
                         Icons.analytics,
                         Colors.orange[600]!,
-                        () {
-                          Get.snackbar(
-                            'Coming Soon',
-                            'Reports feature will be available soon',
-                            backgroundColor: Colors.orange[100],
-                          );
-                        },
+                        () => Get.to(() => ReportsScreen()),
+                       
+
                       ),
                     ),
                   ],

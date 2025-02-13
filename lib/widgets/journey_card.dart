@@ -62,7 +62,7 @@ class JourneyCard extends StatelessWidget {
               _buildInfoRow('Fare', 'Rs ${journey.fare?.toStringAsFixed(2) ?? "N/A"}'),
               _buildInfoRow('Balance', 'Rs ${journey.remainingBalance?.toStringAsFixed(2) ?? "N/A"}'),
             ],
-            if (journey.startLatitude != null) ...[
+            // if (journey.startLatitude != null) ...[
               const SizedBox(height: 8),
               const Text(
                 'Route Details',
@@ -89,7 +89,7 @@ class JourneyCard extends StatelessWidget {
                   ),
                 ),
             ],
-          ],
+          // ],
         ),
       ),
     );
