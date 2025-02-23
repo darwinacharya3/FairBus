@@ -1,212 +1,216 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
+// import 'package:flutter/material.dart';
+// import 'package:firebase_database/firebase_database.dart';
 
-class BusJourneyMonitorScreen extends StatelessWidget {
-  final FirebaseDatabase _database = FirebaseDatabase.instance;
+// class BusJourneyMonitorScreen extends StatelessWidget {
+//   final FirebaseDatabase _database = FirebaseDatabase.instance;
   
-  BusJourneyMonitorScreen({super.key});
+//   BusJourneyMonitorScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Journey Monitor'),
-        backgroundColor: Colors.green[600],
-      ),
-      body: StreamBuilder(
-        stream: _database.ref('bus_entries').onValue,
-        builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Live Journey Monitor'),
+//         backgroundColor: Colors.green[600],
+//       ),
+//       body: StreamBuilder(
+//         stream: _database.ref('bus_entries').onValue,
+//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//           if (!snapshot.hasData) {
+//             return const Center(child: CircularProgressIndicator());
+//           }
 
-          final Map<dynamic, dynamic>? entries = 
-            snapshot.data?.snapshot.value as Map?;
+//           final Map<dynamic, dynamic>? entries = 
+//             snapshot.data?.snapshot.value as Map?;
           
-          if (entries == null || entries.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.directions_bus_outlined, 
-                    size: 64, 
-                    color: Colors.grey
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No Active Journeys',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
+//           if (entries == null || entries.isEmpty) {
+//             return const Center(
+//               child: Column(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: [
+//                   Icon(Icons.directions_bus_outlined, 
+//                     size: 64, 
+//                     color: Colors.grey
+//                   ),
+//                   SizedBox(height: 16),
+//                   Text(
+//                     'No Active Journeys',
+//                     style: TextStyle(
+//                       fontSize: 18,
+//                       color: Colors.grey,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           }
 
-          final List<MapEntry<dynamic, dynamic>> sortedEntries = 
-            entries.entries.toList()
-              ..sort((a, b) {
-                final timeA = a.value['entry_time'] as String;
-                final timeB = b.value['entry_time'] as String;
-                return timeB.compareTo(timeA);
-              });
+//           final List<MapEntry<dynamic, dynamic>> sortedEntries = 
+//             entries.entries.toList()
+//               ..sort((a, b) {
+//                 final timeA = a.value['entry_time'] as String;
+//                 final timeB = b.value['entry_time'] as String;
+//                 return timeB.compareTo(timeA);
+//               });
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: sortedEntries.length,
-            itemBuilder: (context, index) {
-              final entry = sortedEntries[index];
-              return _buildJourneyCard(entry.key, entry.value);
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _database.ref().get();
-        },
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.refresh),
-      ),
-    );
-  }
+//           return ListView.builder(
+//             padding: const EdgeInsets.all(16),
+//             itemCount: sortedEntries.length,
+//             itemBuilder: (context, index) {
+//               final entry = sortedEntries[index];
+//               return _buildJourneyCard(entry.key, entry.value);
+//             },
+//           );
+//         },
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () {
+//           _database.ref().get();
+//         },
+//         backgroundColor: Colors.green,
+//         child: const Icon(Icons.refresh),
+//       ),
+//     );
+//   }
 
-  Widget _buildJourneyCard(String rfidId, Map<dynamic, dynamic> journeyData) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: StreamBuilder(
-        stream: _database.ref('bus_exits/$rfidId').onValue,
-        builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
-          final exitData = snapshot.data?.snapshot.value as Map?;
+//   Widget _buildJourneyCard(String rfidId, Map<dynamic, dynamic> journeyData) {
+//     return Card(
+//       elevation: 2,
+//       margin: const EdgeInsets.only(bottom: 12),
+//       child: StreamBuilder(
+//         stream: _database.ref('bus_exits/$rfidId').onValue,
+//         builder: (context, AsyncSnapshot<DatabaseEvent> snapshot) {
+//           final exitData = snapshot.data?.snapshot.value as Map?;
           
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: exitData == null ? Colors.blue.shade200 : Colors.green.shade200,
-                width: 1,
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header Row with Status
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: exitData == null 
-                            ? Colors.blue.shade50 
-                            : Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          exitData == null ? Icons.directions_bus : Icons.done_all,
-                          color: exitData == null ? Colors.blue : Colors.green,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'RFID: $rfidId',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: exitData == null 
-                                  ? Colors.blue.shade50 
-                                  : Colors.green.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                exitData == null ? 'In Progress' : 'Completed',
-                                style: TextStyle(
-                                  color: exitData == null 
-                                    ? Colors.blue.shade700 
-                                    : Colors.green.shade700,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Journey Details
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, size: 14),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Entry: ${journeyData['entry_time']}',
-                          style: const TextStyle(fontSize: 13),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (exitData != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.logout, size: 14),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Exit: ${exitData['exit_time']}',
-                            style: const TextStyle(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.route, size: 14),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Distance: ${exitData['distance']} km',
-                            style: const TextStyle(fontSize: 13),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
+//           return Container(
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(8),
+//               border: Border.all(
+//                 color: exitData == null ? Colors.blue.shade200 : Colors.green.shade200,
+//                 width: 1,
+//               ),
+//             ),
+//             child: Padding(
+//               padding: const EdgeInsets.all(12),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   // Header Row with Status
+//                   Row(
+//                     children: [
+//                       Container(
+//                         padding: const EdgeInsets.all(8),
+//                         decoration: BoxDecoration(
+//                           color: exitData == null 
+//                             ? Colors.blue.shade50 
+//                             : Colors.green.shade50,
+//                           borderRadius: BorderRadius.circular(8),
+//                         ),
+//                         child: Icon(
+//                           exitData == null ? Icons.directions_bus : Icons.done_all,
+//                           color: exitData == null ? Colors.blue : Colors.green,
+//                           size: 24,
+//                         ),
+//                       ),
+//                       const SizedBox(width: 12),
+//                       Expanded(
+//                         child: Column(
+//                           crossAxisAlignment: CrossAxisAlignment.start,
+//                           children: [
+//                             Text(
+//                               'RFID: $rfidId',
+//                               style: const TextStyle(
+//                                 fontWeight: FontWeight.bold,
+//                                 fontSize: 14,
+//                               ),
+//                               overflow: TextOverflow.ellipsis,
+//                             ),
+//                             const SizedBox(height: 4),
+//                             Container(
+//                               padding: const EdgeInsets.symmetric(
+//                                 horizontal: 8,
+//                                 vertical: 4,
+//                               ),
+//                               decoration: BoxDecoration(
+//                                 color: exitData == null 
+//                                   ? Colors.blue.shade50 
+//                                   : Colors.green.shade50,
+//                                 borderRadius: BorderRadius.circular(12),
+//                               ),
+//                               child: Text(
+//                                 exitData == null ? 'In Progress' : 'Completed',
+//                                 style: TextStyle(
+//                                   color: exitData == null 
+//                                     ? Colors.blue.shade700 
+//                                     : Colors.green.shade700,
+//                                   fontSize: 12,
+//                                   fontWeight: FontWeight.w500,
+//                                 ),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 12),
+//                   // Journey Details
+//                   Row(
+//                     children: [
+//                       const Icon(Icons.access_time, size: 14),
+//                       const SizedBox(width: 8),
+//                       Expanded(
+//                         child: Text(
+//                           'Entry: ${journeyData['entry_time']}',
+//                           style: const TextStyle(fontSize: 13),
+//                           overflow: TextOverflow.ellipsis,
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                   if (exitData != null) ...[
+//                     const SizedBox(height: 8),
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.logout, size: 14),
+//                         const SizedBox(width: 8),
+//                         Expanded(
+//                           child: Text(
+//                             'Exit: ${exitData['exit_time']}',
+//                             style: const TextStyle(fontSize: 13),
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Row(
+//                       children: [
+//                         const Icon(Icons.route, size: 14),
+//                         const SizedBox(width: 8),
+//                         Expanded(
+//                           child: Text(
+//                             'Distance: ${exitData['distance']} km',
+//                             style: const TextStyle(fontSize: 13),
+//                             overflow: TextOverflow.ellipsis,
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 ],
+//               ),
+//             ),
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
+
+
+
+
 
 
 

@@ -226,22 +226,22 @@ class AdminDashboardScreen extends StatelessWidget {
                         () => Get.toNamed('/admin/rfid-management'),
                       ),
                     ),
-                    SizedBox(
-                      width: (constraints.maxWidth - 16) / 2,
-                      child: _buildFeatureCard(
-                        'Transaction History',
-                        'View transactions',
-                        Icons.receipt_long,
-                        Colors.purple[600]!,
-                        () {
-                          Get.snackbar(
-                            'Coming Soon',
-                            'Transaction history feature will be available soon',
-                            backgroundColor: Colors.purple[100],
-                          );
-                        },
-                      ),
-                    ),
+                    // SizedBox(
+                    //   width: (constraints.maxWidth - 16) / 2,
+                    //   child: _buildFeatureCard(
+                    //     'Transaction History',
+                    //     'View transactions',
+                    //     Icons.receipt_long,
+                    //     Colors.purple[600]!,
+                    //     () {
+                    //       Get.snackbar(
+                    //         'Coming Soon',
+                    //         'Transaction history feature will be available soon',
+                    //         backgroundColor: Colors.purple[100],
+                    //       );
+                    //     },
+                    //   ),
+                    // ),
                     SizedBox(
                       width: (constraints.maxWidth - 16) / 2,
                        child:_buildFeatureCard(
@@ -254,17 +254,17 @@ class AdminDashboardScreen extends StatelessWidget {
 
                     ),
 
-                      SizedBox(
-                      width: (constraints.maxWidth - 16) / 2,
-                       child:_buildFeatureCard(
-                                'Live Monitoring',
-                                'Real Time Database Monitoring',
-                                  Icons.live_tv,
-                                 Colors.blue[600]!,
-                                () => Get.toNamed('/admin/journeys'),
-                              ),
+                    //   SizedBox(
+                    //   width: (constraints.maxWidth - 16) / 2,
+                    //    child:_buildFeatureCard(
+                    //             'Live Monitoring',
+                    //             'Real Time Database Monitoring',
+                    //               Icons.live_tv,
+                    //              Colors.blue[600]!,
+                    //             () => Get.toNamed('/admin/journeys'),
+                    //           ),
 
-                    ),
+                    // ),
 
                     
 

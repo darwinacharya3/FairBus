@@ -171,7 +171,7 @@ class DatabaseService {
         'end_longitude': exitData?['end_longitude'],
         'distance': exitData?['distance'],
         'fare': exitData?['fare'],
-        'remaining_balance': exitData?['remaining_balance'],
+        // 'remaining_balance': exitData?['remaining_balance'],
         'status': exitData != null ? 'completed' : 'active',
         'date': CustomDateUtils.getTodayFormattedDate(),
         'timestamp': FieldValue.serverTimestamp(),
@@ -200,7 +200,7 @@ class DatabaseService {
         'end_longitude': exitData['end_longitude'],
         'distance': exitData['distance'],
         'fare': exitData['fare'],
-        'remaining_balance': exitData['remaining_balance'],
+        // 'remaining_balance': exitData['remaining_balance'],
         'status': 'completed',
       });
       debugPrint('Journey exit updated successfully');
