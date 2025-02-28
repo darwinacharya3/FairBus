@@ -124,6 +124,134 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
 
 
 
+
+// import 'package:flutter/material.dart';
+// import 'package:major_project/models/journey.dart';
+// import 'package:major_project/models/daily_reports.dart';
+// import 'package:major_project/services/database_service.dart';
+// import 'package:major_project/widgets/amount_card.dart';
+// import 'package:major_project/widgets/journey_card.dart';
+
+// class JourneyHistoryScreen extends StatefulWidget {
+//   const JourneyHistoryScreen({super.key});
+
+//   @override
+//   State<JourneyHistoryScreen> createState() => _JourneyHistoryScreenState();
+// }
+
+// class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
+//   final DatabaseService _databaseService = DatabaseService();
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _databaseService.setupRealtimeDatabaseListener();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Journey History'),
+//         backgroundColor: Colors.green[600],
+//       ),
+//       body: Column(
+//         children: [
+//           // Amount Card
+//           StreamBuilder<DailyReport>(
+//             stream: _databaseService.getTodaysReport(),
+//             builder: (context, snapshot) {
+//               if (snapshot.hasError) {
+//                 debugPrint('Report Error: ${snapshot.error}');
+//                 return Card(
+//                   margin: const EdgeInsets.all(16),
+//                   child: Padding(
+//                     padding: const EdgeInsets.all(16),
+//                     child: Column(
+//                       children: [
+//                         const Icon(Icons.error_outline, color: Colors.red, size: 48),
+//                         const SizedBox(height: 8),
+//                         Text('Error: ${snapshot.error}'),
+//                       ],
+//                     ),
+//                   ),
+//                 );
+//               }
+
+//               if (!snapshot.hasData) {
+//                 return const Card(
+//                   margin: EdgeInsets.all(16),
+//                   child: Padding(
+//                     padding: EdgeInsets.all(16),
+//                     child: Center(child: CircularProgressIndicator()),
+//                   ),
+//                 );
+//               }
+
+//               return AmountCard(report: snapshot.data!);
+//             },
+//           ),
+
+//           // Journey History List
+//           Expanded(
+//             child: StreamBuilder<List<Journey>>(
+//               stream: _databaseService.getTodaysJourneys(),
+//               builder: (context, snapshot) {
+//                 if (snapshot.hasError) {
+//                   debugPrint('Journeys Error: ${snapshot.error}');
+//                   return Center(
+//                     child: Column(
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: [
+//                         const Icon(Icons.error_outline, color: Colors.red, size: 48),
+//                         const SizedBox(height: 8),
+//                         Text('Error: ${snapshot.error}'),
+//                       ],
+//                     ),
+//                   );
+//                 }
+
+//                 if (!snapshot.hasData) {
+//                   return const Center(child: CircularProgressIndicator());
+//                 }
+
+//                 final journeys = snapshot.data!;
+                
+//                 if (journeys.isEmpty) {
+//                   return const Center(
+//                     child: Column(
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: [
+//                         Icon(Icons.directions_bus_outlined, size: 48, color: Colors.grey),
+//                         SizedBox(height: 8),
+//                         Text('No journeys today'),
+//                       ],
+//                     ),
+//                   );
+//                 }
+
+//                 return ListView.builder(
+//                   itemCount: journeys.length,
+//                   itemBuilder: (context, index) {
+//                     return JourneyCard(journey: journeys[index]);
+//                   },
+//                 );
+//               },
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
 // import 'package:flutter/material.dart';
 // import 'package:firebase_database/firebase_database.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';

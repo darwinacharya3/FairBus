@@ -1,4 +1,3 @@
-// daily_report.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DailyReport {
@@ -62,6 +61,7 @@ class DailyReport {
     );
   }
 }
+
 
 
 
