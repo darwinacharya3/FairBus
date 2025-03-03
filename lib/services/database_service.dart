@@ -103,10 +103,16 @@ class DatabaseService {
     }
   }
 
+
 void setupRealtimeDatabaseListener() {
   try {
-    // Track the timestamp when the listener is initialized
-    final DateTime initializationTime = DateTime.now();
+    // Get today's date components for comparison
+    final now = DateTime.now();
+    final todayYear = now.year;
+    final todayMonth = now.month;
+    final todayDay = now.day;
+    
+    debugPrint('Setting up listeners for today: ${now.year}-${now.month}-${now.day}');
     
     // Listen for new entries
     _database.ref('bus_entries').onChildAdded.listen((event) async {
@@ -121,41 +127,53 @@ void setupRealtimeDatabaseListener() {
         return;
       }
       
-      // Skip processing for old data
+      // Parse the entry time to check if it's from today
       try {
-        // Parse the timestamp (assuming format like "2025-2-26 1:6:49")
-        final DateTime entryTime = DateTime.parse(
-            entryTimeString.replaceAll(' ', 'T'));
-        
-        // Ignore events that happened before listener initialization
-        if (entryTime.isBefore(initializationTime)) {
-          debugPrint('Ignoring old entry data from: $entryTimeString');
-          return;
+        // Handle the format "2025-3-1 16:13:13"
+        final parts = entryTimeString.split(' ');
+        if (parts.length >= 2) {
+          final dateParts = parts[0].split('-');
+          if (dateParts.length >= 3) {
+            final year = int.tryParse(dateParts[0]) ?? 0;
+            final month = int.tryParse(dateParts[1]) ?? 0;
+            final day = int.tryParse(dateParts[2]) ?? 0;
+            
+            // Check if this entry is from today
+            if (year != todayYear || month != todayMonth || day != todayDay) {
+              debugPrint('Ignoring entry from different date: $entryTimeString (not today)');
+              return;
+            }
+          }
         }
       } catch (e) {
-        debugPrint('Error parsing entry time: $e');
-        // Continue with processing if timestamp parsing fails
+        debugPrint('Error parsing entry date: $e');
+        // Continue processing if date parsing fails
       }
       
       debugPrint('Processing new entry for RFID: $rfidId at $entryTimeString');
 
-      final existingJourney = await _firestore
-          .collection('journey_history')
-          .where('rfid', isEqualTo: rfidId)
-          .where('entry_time', isEqualTo: entryData['entry_time'])
-          .get();
+      // Check if the journey already exists in Firestore
+      try {
+        final existingJourney = await _firestore
+            .collection('journey_history')
+            .where('rfid', isEqualTo: rfidId)
+            .where('entry_time', isEqualTo: entryTimeString)
+            .get();
 
-      if (existingJourney.docs.isEmpty) {
-        await storeJourneyHistory(rfidId, entryData, null);
-        debugPrint('Stored new journey for RFID: $rfidId');
-      } else {
-        debugPrint('Journey already exists for RFID: $rfidId');
+        if (existingJourney.docs.isEmpty) {
+          await storeJourneyHistory(rfidId, entryData, null);
+          debugPrint('Stored new journey for RFID: $rfidId');
+        } else {
+          debugPrint('Journey already exists for RFID: $rfidId');
+        }
+      } catch (e) {
+        debugPrint('Error checking or storing journey: $e');
       }
     }, onError: (error) {
       debugPrint('Error in bus_entries listener: $error');
     });
 
-    // Listen for exits with similar timestamp validation
+    // Listen for exits with similar date validation
     _database.ref('bus_exits').onChildAdded.listen((event) async {
       if (event.snapshot.value == null) return;
       
@@ -168,45 +186,59 @@ void setupRealtimeDatabaseListener() {
         return;
       }
       
-      // Skip processing for old data
+      // Parse the exit time to check if it's from today
       try {
-        // Parse the timestamp
-        final DateTime exitTime = DateTime.parse(
-            exitTimeString.replaceAll(' ', 'T'));
-        
-        // Ignore events that happened before listener initialization
-        if (exitTime.isBefore(initializationTime)) {
-          debugPrint('Ignoring old exit data from: $exitTimeString');
-          return;
+        // Handle the format "2025-3-1 16:14:37"
+        final parts = exitTimeString.split(' ');
+        if (parts.length >= 2) {
+          final dateParts = parts[0].split('-');
+          if (dateParts.length >= 3) {
+            final year = int.tryParse(dateParts[0]) ?? 0;
+            final month = int.tryParse(dateParts[1]) ?? 0;
+            final day = int.tryParse(dateParts[2]) ?? 0;
+            
+            // Check if this exit is from today
+            if (year != todayYear || month != todayMonth || day != todayDay) {
+              debugPrint('Ignoring exit from different date: $exitTimeString (not today)');
+              return;
+            }
+          }
         }
       } catch (e) {
-        debugPrint('Error parsing exit time: $e');
-        // Continue with processing if timestamp parsing fails
+        debugPrint('Error parsing exit date: $e');
+        // Continue processing if date parsing fails
       }
       
       debugPrint('Processing new exit for RFID: $rfidId at $exitTimeString');
 
-      final activeJourney = await _firestore
-          .collection('journey_history')
-          .where('rfid', isEqualTo: rfidId)
-          .where('status', isEqualTo: 'active')
-          .get();
+      try {
+        // Find active journey for this RFID
+        final activeJourney = await _firestore
+            .collection('journey_history')
+            .where('rfid', isEqualTo: rfidId)
+            .where('status', isEqualTo: 'active')
+            .get();
 
-      if (activeJourney.docs.isNotEmpty) {
-        await updateJourneyWithExit(activeJourney.docs.first.id, exitData);
-        debugPrint('Updated journey with exit data for RFID: $rfidId');
-      } else {
-        debugPrint('No active journey found for RFID: $rfidId');
+        if (activeJourney.docs.isNotEmpty) {
+          await updateJourneyWithExit(activeJourney.docs.first.id, exitData);
+          debugPrint('Updated journey with exit data for RFID: $rfidId');
+        } else {
+          debugPrint('No active journey found for RFID: $rfidId');
+        }
+      } catch (e) {
+        debugPrint('Error finding or updating journey: $e');
       }
     }, onError: (error) {
       debugPrint('Error in bus_exits listener: $error');
     });
 
-    debugPrint('Realtime database listeners setup complete at: $initializationTime');
+    debugPrint('Realtime database listeners setup complete');
   } catch (e) {
     debugPrint('Error setting up realtime listeners: $e');
   }
 }
+
+
 
 
   // void setupRealtimeDatabaseListener() {
@@ -322,6 +354,751 @@ void setupRealtimeDatabaseListener() {
     }
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:firebase_database/firebase_database.dart';
+// import 'package:flutter/material.dart';
+// import '../models/journey.dart';
+// import '../models/daily_reports.dart';
+// import '../utils/date_utils.dart';
+
+// class DatabaseService {
+//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+//   final FirebaseDatabase _database = FirebaseDatabase.instance;
+
+//   // Modified to avoid composite index
+//   Stream<List<Journey>> getTodaysJourneys() {
+//     final today = CustomDateUtils.getTodayFormattedDate();
+//     try {
+//       debugPrint('Fetching journeys for date: $today');
+//       return _firestore
+//           .collection('journey_history')
+//           .where('date', isEqualTo: today)
+//           .snapshots()
+//           .map((snapshot) {
+//             debugPrint('Received ${snapshot.docs.length} journeys');
+//             // Sort the journeys in memory instead of in the query
+//             final journeys = snapshot.docs
+//                 .map((doc) => Journey.fromMap(doc.data()))
+//                 .toList()
+//               ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+//             return journeys;
+//           })
+//           .handleError((error) {
+//             debugPrint('Error in getTodaysJourneys: $error');
+//             throw error;
+//           });
+//     } catch (e) {
+//       debugPrint('Exception in getTodaysJourneys: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Stream<DailyReport> getTodaysReport() {
+//     final today = CustomDateUtils.getTodayFormattedDate();
+//     try {
+//       debugPrint('Fetching report for date: $today');
+//       return _firestore
+//           .collection('analytics_and_report')
+//           .doc(today)
+//           .snapshots()
+//           .map((doc) {
+//             debugPrint('Received report data: ${doc.data()}');
+//             return doc.exists
+//                 ? DailyReport.fromMap(doc.data()!)
+//                 : DailyReport(
+//                     date: today,
+//                     totalAmount: 0,
+//                     totalJourneys: 0,
+//                     rfidsScanned: [],
+//                     timestamp: DateTime.now(),
+//                   );
+//           })
+//           .handleError((error) {
+//             debugPrint('Error in getTodaysReport: $error');
+//             throw error;
+//           });
+//     } catch (e) {
+//       debugPrint('Exception in getTodaysReport: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> updateDailyReport(String rfid, double fare) async {
+//     final today = CustomDateUtils.getTodayFormattedDate();
+//     try {
+//       debugPrint('Updating report for date: $today with fare: $fare');
+//       final reportRef = _firestore.collection('analytics_and_report').doc(today);
+      
+//       await _firestore.runTransaction((transaction) async {
+//         final reportDoc = await transaction.get(reportRef);
+        
+//         if (reportDoc.exists) {
+//           final currentReport = DailyReport.fromMap(reportDoc.data()!);
+//           final updatedReport = currentReport.copyWith(
+//             totalAmount: currentReport.totalAmount + fare,
+//             totalJourneys: currentReport.totalJourneys + 1,
+//             rfidsScanned: [...currentReport.rfidsScanned, rfid],
+//           );
+//           transaction.update(reportRef, updatedReport.toMap());
+//           debugPrint('Updated existing report');
+//         } else {
+//           final newReport = DailyReport(
+//             date: today,
+//             totalAmount: fare,
+//             totalJourneys: 1,
+//             rfidsScanned: [rfid],
+//             timestamp: DateTime.now(),
+//           );
+//           transaction.set(reportRef, newReport.toMap());
+//           debugPrint('Created new report');
+//         }
+//       });
+//     } catch (e) {
+//       debugPrint('Error updating daily report: $e');
+//       rethrow;
+//     }
+//   }
+
+
+//   void setupRealtimeDatabaseListener() {
+//   try {
+//     final String todayDate = CustomDateUtils.getTodayFormattedDate();
+//     debugPrint('Setting up listeners for today: $todayDate');
+    
+//     // Listen for new entries
+//     _database.ref('bus_entries').onChildAdded.listen((event) async {
+//       if (event.snapshot.value == null) return;
+      
+//       final entryData = event.snapshot.value as Map<dynamic, dynamic>;
+//       final rfidId = entryData['scannedCardId'];
+//       final entryTimeString = entryData['entry_time']?.toString();
+      
+//       if (rfidId == null || entryTimeString == null) {
+//         debugPrint('Missing RFID ID or entry time in entry data');
+//         return;
+//       }
+      
+//       // Extract date from entry_time and compare with today's date
+//       final entryDateParts = entryTimeString.split(' ')[0].split('-');
+//       if (entryDateParts.length >= 3) {
+//         final year = entryDateParts[0];
+//         final month = entryDateParts[1].padLeft(2, '0');
+//         final day = entryDateParts[2].padLeft(2, '0');
+//         final entryDate = '$year-$month-$day';
+        
+//         // Only process entries from today
+//         if (entryDate != todayDate) {
+//           debugPrint('Ignoring entry from different date: $entryTimeString, today is $todayDate');
+//           return;
+//         }
+//       } else {
+//         debugPrint('Invalid date format in entry time: $entryTimeString');
+//         return;
+//       }
+      
+//       debugPrint('Processing new entry for RFID: $rfidId at $entryTimeString');
+
+//       // Continue with your existing code to process the entry
+//       final existingJourney = await _firestore
+//           .collection('journey_history')
+//           .where('rfid', isEqualTo: rfidId)
+//           .where('entry_time', isEqualTo: entryData['entry_time'])
+//           .get();
+
+//       if (existingJourney.docs.isEmpty) {
+//         await storeJourneyHistory(rfidId, entryData, null);
+//         debugPrint('Stored new journey for RFID: $rfidId');
+//       } else {
+//         debugPrint('Journey already exists for RFID: $rfidId');
+//       }
+//     }, onError: (error) {
+//       debugPrint('Error in bus_entries listener: $error');
+//     });
+
+//     // Apply similar date filtering for bus_exits
+//     _database.ref('bus_exits').onChildAdded.listen((event) async {
+//       if (event.snapshot.value == null) return;
+      
+//       final exitData = event.snapshot.value as Map<dynamic, dynamic>;
+//       final rfidId = exitData['scannedCardId'];
+//       final exitTimeString = exitData['exit_time']?.toString();
+      
+//       if (rfidId == null || exitTimeString == null) {
+//         debugPrint('Missing RFID ID or exit time in exit data');
+//         return;
+//       }
+      
+//       // Extract date from exit_time and compare with today's date
+//       final exitDateParts = exitTimeString.split(' ')[0].split('-');
+//       if (exitDateParts.length >= 3) {
+//         final year = exitDateParts[0];
+//         final month = exitDateParts[1].padLeft(2, '0');
+//         final day = exitDateParts[2].padLeft(2, '0');
+//         final exitDate = '$year-$month-$day';
+        
+//         // Only process exits from today
+//         if (exitDate != todayDate) {
+//           debugPrint('Ignoring exit from different date: $exitTimeString, today is $todayDate');
+//           return;
+//         }
+//       } else {
+//         debugPrint('Invalid date format in exit time: $exitTimeString');
+//         return;
+//       }
+      
+//       debugPrint('Processing new exit for RFID: $rfidId at $exitTimeString');
+
+//       // Continue with existing code
+//       final activeJourney = await _firestore
+//           .collection('journey_history')
+//           .where('rfid', isEqualTo: rfidId)
+//           .where('status', isEqualTo: 'active')
+//           .get();
+
+//       if (activeJourney.docs.isNotEmpty) {
+//         await updateJourneyWithExit(activeJourney.docs.first.id, exitData);
+//         debugPrint('Updated journey with exit data for RFID: $rfidId');
+//       } else {
+//         debugPrint('No active journey found for RFID: $rfidId');
+//       }
+//     }, onError: (error) {
+//       debugPrint('Error in bus_exits listener: $error');
+//     });
+
+//     debugPrint('Realtime database listeners setup complete for date: $todayDate');
+//   } catch (e) {
+//     debugPrint('Error setting up realtime listeners: $e');
+//   }
+// }
+
+// // void setupRealtimeDatabaseListener() {
+// //   try {
+// //     // Track the timestamp when the listener is initialized
+// //     final DateTime initializationTime = DateTime.now();
+    
+// //     // Listen for new entries
+// //     _database.ref('bus_entries').onChildAdded.listen((event) async {
+// //       if (event.snapshot.value == null) return;
+      
+// //       final entryData = event.snapshot.value as Map<dynamic, dynamic>;
+// //       final rfidId = entryData['scannedCardId'];
+// //       final entryTimeString = entryData['entry_time']?.toString();
+      
+// //       if (rfidId == null || entryTimeString == null) {
+// //         debugPrint('Missing RFID ID or entry time in entry data');
+// //         return;
+// //       }
+      
+// //       // Skip processing for old data
+// //       try {
+// //         // Parse the timestamp (assuming format like "2025-2-26 1:6:49")
+// //         final DateTime entryTime = DateTime.parse(
+// //             entryTimeString.replaceAll(' ', 'T'));
+        
+// //         // Ignore events that happened before listener initialization
+// //         if (entryTime.isBefore(initializationTime)) {
+// //           debugPrint('Ignoring old entry data from: $entryTimeString');
+// //           return;
+// //         }
+// //       } catch (e) {
+// //         debugPrint('Error parsing entry time: $e');
+// //         // Continue with processing if timestamp parsing fails
+// //       }
+      
+// //       debugPrint('Processing new entry for RFID: $rfidId at $entryTimeString');
+
+// //       final existingJourney = await _firestore
+// //           .collection('journey_history')
+// //           .where('rfid', isEqualTo: rfidId)
+// //           .where('entry_time', isEqualTo: entryData['entry_time'])
+// //           .get();
+
+// //       if (existingJourney.docs.isEmpty) {
+// //         await storeJourneyHistory(rfidId, entryData, null);
+// //         debugPrint('Stored new journey for RFID: $rfidId');
+// //       } else {
+// //         debugPrint('Journey already exists for RFID: $rfidId');
+// //       }
+// //     }, onError: (error) {
+// //       debugPrint('Error in bus_entries listener: $error');
+// //     });
+
+// //     // Listen for exits with similar timestamp validation
+// //     _database.ref('bus_exits').onChildAdded.listen((event) async {
+// //       if (event.snapshot.value == null) return;
+      
+// //       final exitData = event.snapshot.value as Map<dynamic, dynamic>;
+// //       final rfidId = exitData['scannedCardId'];
+// //       final exitTimeString = exitData['exit_time']?.toString();
+      
+// //       if (rfidId == null || exitTimeString == null) {
+// //         debugPrint('Missing RFID ID or exit time in exit data');
+// //         return;
+// //       }
+      
+// //       // Skip processing for old data
+// //       try {
+// //         // Parse the timestamp
+// //         final DateTime exitTime = DateTime.parse(
+// //             exitTimeString.replaceAll(' ', 'T'));
+        
+// //         // Ignore events that happened before listener initialization
+// //         if (exitTime.isBefore(initializationTime)) {
+// //           debugPrint('Ignoring old exit data from: $exitTimeString');
+// //           return;
+// //         }
+// //       } catch (e) {
+// //         debugPrint('Error parsing exit time: $e');
+// //         // Continue with processing if timestamp parsing fails
+// //       }
+      
+// //       debugPrint('Processing new exit for RFID: $rfidId at $exitTimeString');
+
+// //       final activeJourney = await _firestore
+// //           .collection('journey_history')
+// //           .where('rfid', isEqualTo: rfidId)
+// //           .where('status', isEqualTo: 'active')
+// //           .get();
+
+// //       if (activeJourney.docs.isNotEmpty) {
+// //         await updateJourneyWithExit(activeJourney.docs.first.id, exitData);
+// //         debugPrint('Updated journey with exit data for RFID: $rfidId');
+// //       } else {
+// //         debugPrint('No active journey found for RFID: $rfidId');
+// //       }
+// //     }, onError: (error) {
+// //       debugPrint('Error in bus_exits listener: $error');
+// //     });
+
+// //     debugPrint('Realtime database listeners setup complete at: $initializationTime');
+// //   } catch (e) {
+// //     debugPrint('Error setting up realtime listeners: $e');
+// //   }
+// // }
+
+
+//   // void setupRealtimeDatabaseListener() {
+//   //   try {
+//   //     // Listen for new entries
+//   //     _database.ref('bus_entries').onChildAdded.listen((event) async {
+//   //       if (event.snapshot.value == null) return;
+//   //       debugPrint('New entry detected: ${event.snapshot.key}');
+
+//   //       final rfidId = event.snapshot.key!;
+//   //       final entryData = event.snapshot.value as Map<dynamic, dynamic>;
+
+//   //       final existingJourney = await _firestore
+//   //           .collection('journey_history')
+//   //           .where('rfid', isEqualTo: rfidId)
+//   //           .where('entry_time', isEqualTo: entryData['entry_time'])
+//   //           .get();
+
+//   //       if (existingJourney.docs.isEmpty) {
+//   //         await storeJourneyHistory(rfidId, entryData, null);
+//   //         debugPrint('Stored new journey');
+//   //       }
+//   //     }, onError: (error) {
+//   //       debugPrint('Error in bus_entries listener: $error');
+//   //     });
+
+//   //     // Listen for exits
+//   //     _database.ref('bus_exits').onChildAdded.listen((event) async {
+//   //       if (event.snapshot.value == null) return;
+//   //       debugPrint('New exit detected: ${event.snapshot.key}');
+
+//   //       final rfidId = event.snapshot.key!;
+//   //       final exitData = event.snapshot.value as Map<dynamic, dynamic>;
+
+//   //       final activeJourney = await _firestore
+//   //           .collection('journey_history')
+//   //           .where('rfid', isEqualTo: rfidId)
+//   //           .where('status', isEqualTo: 'active')
+//   //           .get();
+
+//   //       if (activeJourney.docs.isNotEmpty) {
+//   //         await updateJourneyWithExit(activeJourney.docs.first.id, exitData);
+//   //         debugPrint('Updated journey with exit data');
+//   //       }
+//   //     }, onError: (error) {
+//   //       debugPrint('Error in bus_exits listener: $error');
+//   //     });
+
+//   //     debugPrint('Realtime database listeners setup complete');
+//   //   } catch (e) {
+//   //     debugPrint('Error setting up realtime listeners: $e');
+//   //   }
+//   // }
+
+//   Future<void> storeJourneyHistory(
+//     String rfid,
+//     Map<dynamic, dynamic> entryData,
+//     Map<dynamic, dynamic>? exitData,
+//   ) async {
+//     try {
+//       final journeyData = {
+//         'rfid': rfid,
+//         'entry_time': entryData['entry_time'],
+//         'start_latitude': entryData['start_latitude'],
+//         'start_longitude': entryData['start_longitude'],
+//         'exit_time': exitData?['exit_time'],
+//         'end_latitude': exitData?['end_latitude'],
+//         'end_longitude': exitData?['end_longitude'],
+//         'distance': exitData?['distance'],
+//         'fare': exitData?['fare'],
+//         'remaining_balance': exitData?['remaining_balance'],
+//         'status': exitData != null ? 'completed' : 'active',
+//         'date': CustomDateUtils.getTodayFormattedDate(),
+//         'timestamp': FieldValue.serverTimestamp(),
+//       };
+
+//       await _firestore.collection('journey_history').add(journeyData);
+//       debugPrint('Journey stored successfully');
+
+//       if (exitData != null) {
+//         await updateDailyReport(rfid, exitData['fare']);
+//       }
+//     } catch (e) {
+//       debugPrint('Error storing journey: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> updateJourneyWithExit(
+//     String docId,
+//     Map<dynamic, dynamic> exitData,
+//   ) async {
+//     try {
+//       await _firestore.collection('journey_history').doc(docId).update({
+//         'exit_time': exitData['exit_time'],
+//         'end_latitude': exitData['end_latitude'],
+//         'end_longitude': exitData['end_longitude'],
+//         'distance': exitData['distance'],
+//         'fare': exitData['fare'],
+//         'remaining_balance': exitData['remaining_balance'],
+//         'status': 'completed',
+//       });
+//       debugPrint('Journey exit updated successfully');
+
+//       final journeyDoc = await _firestore.collection('journey_history').doc(docId).get();
+//       if (journeyDoc.exists) {
+//         final journeyData = journeyDoc.data()!;
+//         await updateDailyReport(journeyData['rfid'], exitData['fare']);
+//       }
+//     } catch (e) {
+//       debugPrint('Error updating journey: $e');
+//       rethrow;
+//     }
+//   }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:firebase_database/firebase_database.dart';
+// import 'package:flutter/material.dart';
+// import '../models/journey.dart';
+// import '../models/daily_reports.dart';
+// import '../utils/date_utils.dart';
+
+// class DatabaseService {
+//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+//   final FirebaseDatabase _database = FirebaseDatabase.instance;
+
+//   // Modified to avoid composite index
+//   Stream<List<Journey>> getTodaysJourneys() {
+//     final today = CustomDateUtils.getTodayFormattedDate();
+//     try {
+//       debugPrint('Fetching journeys for date: $today');
+//       return _firestore
+//           .collection('journey_history')
+//           .where('date', isEqualTo: today)
+//           .snapshots()
+//           .map((snapshot) {
+//             debugPrint('Received ${snapshot.docs.length} journeys');
+//             // Sort the journeys in memory instead of in the query
+//             final journeys = snapshot.docs
+//                 .map((doc) => Journey.fromMap(doc.data()))
+//                 .toList()
+//               ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+//             return journeys;
+//           })
+//           .handleError((error) {
+//             debugPrint('Error in getTodaysJourneys: $error');
+//             throw error;
+//           });
+//     } catch (e) {
+//       debugPrint('Exception in getTodaysJourneys: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Stream<DailyReport> getTodaysReport() {
+//     final today = CustomDateUtils.getTodayFormattedDate();
+//     try {
+//       debugPrint('Fetching report for date: $today');
+//       return _firestore
+//           .collection('analytics_and_report')
+//           .doc(today)
+//           .snapshots()
+//           .map((doc) {
+//             debugPrint('Received report data: ${doc.data()}');
+//             return doc.exists
+//                 ? DailyReport.fromMap(doc.data()!)
+//                 : DailyReport(
+//                     date: today,
+//                     totalAmount: 0,
+//                     totalJourneys: 0,
+//                     rfidsScanned: [],
+//                     timestamp: DateTime.now(),
+//                   );
+//           })
+//           .handleError((error) {
+//             debugPrint('Error in getTodaysReport: $error');
+//             throw error;
+//           });
+//     } catch (e) {
+//       debugPrint('Exception in getTodaysReport: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> updateDailyReport(String rfid, double fare) async {
+//     final today = CustomDateUtils.getTodayFormattedDate();
+//     try {
+//       debugPrint('Updating report for date: $today with fare: $fare');
+//       final reportRef = _firestore.collection('analytics_and_report').doc(today);
+      
+//       await _firestore.runTransaction((transaction) async {
+//         final reportDoc = await transaction.get(reportRef);
+        
+//         if (reportDoc.exists) {
+//           final currentReport = DailyReport.fromMap(reportDoc.data()!);
+//           final updatedReport = currentReport.copyWith(
+//             totalAmount: currentReport.totalAmount + fare,
+//             totalJourneys: currentReport.totalJourneys + 1,
+//             rfidsScanned: [...currentReport.rfidsScanned, rfid],
+//           );
+//           transaction.update(reportRef, updatedReport.toMap());
+//           debugPrint('Updated existing report');
+//         } else {
+//           final newReport = DailyReport(
+//             date: today,
+//             totalAmount: fare,
+//             totalJourneys: 1,
+//             rfidsScanned: [rfid],
+//             timestamp: DateTime.now(),
+//           );
+//           transaction.set(reportRef, newReport.toMap());
+//           debugPrint('Created new report');
+//         }
+//       });
+//     } catch (e) {
+//       debugPrint('Error updating daily report: $e');
+//       rethrow;
+//     }
+//   }
+
+// void setupRealtimeDatabaseListener() {
+//   try {
+//     // Track the timestamp when the listener is initialized
+//     final DateTime initializationTime = DateTime.now();
+    
+//     // Listen for new entries
+//     _database.ref('bus_entries').onChildAdded.listen((event) async {
+//       if (event.snapshot.value == null) return;
+      
+//       final entryData = event.snapshot.value as Map<dynamic, dynamic>;
+//       final rfidId = entryData['scannedCardId'];
+//       final entryTimeString = entryData['entry_time']?.toString();
+      
+//       if (rfidId == null || entryTimeString == null) {
+//         debugPrint('Missing RFID ID or entry time in entry data');
+//         return;
+//       }
+      
+//       // Skip processing for old data
+//       try {
+//         // Parse the timestamp (assuming format like "2025-2-26 1:6:49")
+//         final DateTime entryTime = DateTime.parse(
+//             entryTimeString.replaceAll(' ', 'T'));
+        
+//         // Ignore events that happened before listener initialization
+//         if (entryTime.isBefore(initializationTime)) {
+//           debugPrint('Ignoring old entry data from: $entryTimeString');
+//           return;
+//         }
+//       } catch (e) {
+//         debugPrint('Error parsing entry time: $e');
+//         // Continue with processing if timestamp parsing fails
+//       }
+      
+//       debugPrint('Processing new entry for RFID: $rfidId at $entryTimeString');
+
+//       final existingJourney = await _firestore
+//           .collection('journey_history')
+//           .where('rfid', isEqualTo: rfidId)
+//           .where('entry_time', isEqualTo: entryData['entry_time'])
+//           .get();
+
+//       if (existingJourney.docs.isEmpty) {
+//         await storeJourneyHistory(rfidId, entryData, null);
+//         debugPrint('Stored new journey for RFID: $rfidId');
+//       } else {
+//         debugPrint('Journey already exists for RFID: $rfidId');
+//       }
+//     }, onError: (error) {
+//       debugPrint('Error in bus_entries listener: $error');
+//     });
+
+//     // Listen for exits with similar timestamp validation
+//     _database.ref('bus_exits').onChildAdded.listen((event) async {
+//       if (event.snapshot.value == null) return;
+      
+//       final exitData = event.snapshot.value as Map<dynamic, dynamic>;
+//       final rfidId = exitData['scannedCardId'];
+//       final exitTimeString = exitData['exit_time']?.toString();
+      
+//       if (rfidId == null || exitTimeString == null) {
+//         debugPrint('Missing RFID ID or exit time in exit data');
+//         return;
+//       }
+      
+//       // Skip processing for old data
+//       try {
+//         // Parse the timestamp
+//         final DateTime exitTime = DateTime.parse(
+//             exitTimeString.replaceAll(' ', 'T'));
+        
+//         // Ignore events that happened before listener initialization
+//         if (exitTime.isBefore(initializationTime)) {
+//           debugPrint('Ignoring old exit data from: $exitTimeString');
+//           return;
+//         }
+//       } catch (e) {
+//         debugPrint('Error parsing exit time: $e');
+//         // Continue with processing if timestamp parsing fails
+//       }
+      
+//       debugPrint('Processing new exit for RFID: $rfidId at $exitTimeString');
+
+//       final activeJourney = await _firestore
+//           .collection('journey_history')
+//           .where('rfid', isEqualTo: rfidId)
+//           .where('status', isEqualTo: 'active')
+//           .get();
+
+//       if (activeJourney.docs.isNotEmpty) {
+//         await updateJourneyWithExit(activeJourney.docs.first.id, exitData);
+//         debugPrint('Updated journey with exit data for RFID: $rfidId');
+//       } else {
+//         debugPrint('No active journey found for RFID: $rfidId');
+//       }
+//     }, onError: (error) {
+//       debugPrint('Error in bus_exits listener: $error');
+//     });
+
+//     debugPrint('Realtime database listeners setup complete at: $initializationTime');
+//   } catch (e) {
+//     debugPrint('Error setting up realtime listeners: $e');
+//   }
+// }
+
+
+//   Future<void> storeJourneyHistory(
+//     String rfid,
+//     Map<dynamic, dynamic> entryData,
+//     Map<dynamic, dynamic>? exitData,
+//   ) async {
+//     try {
+//       final journeyData = {
+//         'rfid': rfid,
+//         'entry_time': entryData['entry_time'],
+//         'start_latitude': entryData['start_latitude'],
+//         'start_longitude': entryData['start_longitude'],
+//         'exit_time': exitData?['exit_time'],
+//         'end_latitude': exitData?['end_latitude'],
+//         'end_longitude': exitData?['end_longitude'],
+//         'distance': exitData?['distance'],
+//         'fare': exitData?['fare'],
+//         'remaining_balance': exitData?['remaining_balance'],
+//         'status': exitData != null ? 'completed' : 'active',
+//         'date': CustomDateUtils.getTodayFormattedDate(),
+//         'timestamp': FieldValue.serverTimestamp(),
+//       };
+
+//       await _firestore.collection('journey_history').add(journeyData);
+//       debugPrint('Journey stored successfully');
+
+//       if (exitData != null) {
+//         await updateDailyReport(rfid, exitData['fare']);
+//       }
+//     } catch (e) {
+//       debugPrint('Error storing journey: $e');
+//       rethrow;
+//     }
+//   }
+
+//   Future<void> updateJourneyWithExit(
+//     String docId,
+//     Map<dynamic, dynamic> exitData,
+//   ) async {
+//     try {
+//       await _firestore.collection('journey_history').doc(docId).update({
+//         'exit_time': exitData['exit_time'],
+//         'end_latitude': exitData['end_latitude'],
+//         'end_longitude': exitData['end_longitude'],
+//         'distance': exitData['distance'],
+//         'fare': exitData['fare'],
+//         'remaining_balance': exitData['remaining_balance'],
+//         'status': 'completed',
+//       });
+//       debugPrint('Journey exit updated successfully');
+
+//       final journeyDoc = await _firestore.collection('journey_history').doc(docId).get();
+//       if (journeyDoc.exists) {
+//         final journeyData = journeyDoc.data()!;
+//         await updateDailyReport(journeyData['rfid'], exitData['fare']);
+//       }
+//     } catch (e) {
+//       debugPrint('Error updating journey: $e');
+//       rethrow;
+//     }
+//   }
+// }
 
 
 
