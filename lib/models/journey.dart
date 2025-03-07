@@ -10,7 +10,7 @@ class Journey {
   final double? endLongitude;
   final double? distance;
   final double? fare;
-  final double? remainingBalance;
+  // final double? remainingBalance;
   final String status;
   final DateTime timestamp;
 
@@ -24,7 +24,7 @@ class Journey {
     this.endLongitude,
     this.distance,
     this.fare,
-    this.remainingBalance,
+    // this.remainingBalance,
     required this.status,
     required this.timestamp,
   });
@@ -50,7 +50,7 @@ class Journey {
       endLongitude: (map['end_longitude'] as num?)?.toDouble(),
       distance: (map['distance'] as num?)?.toDouble(),
       fare: (map['fare'] as num?)?.toDouble(),
-      remainingBalance: (map['remaining_balance'] as num?)?.toDouble(),
+      // remainingBalance: (map['remaining_balance'] as num?)?.toDouble(),
       status: map['status'] ?? 'active',
       timestamp: getDateTime(map['timestamp']),
     );
@@ -67,7 +67,7 @@ class Journey {
       'end_longitude': endLongitude,
       'distance': distance,
       'fare': fare,
-      'remaining_balance': remainingBalance,
+      // 'remaining_balance': remainingBalance,
       'status': status,
       'timestamp': FieldValue.serverTimestamp(),  // Use server timestamp when saving
     };
