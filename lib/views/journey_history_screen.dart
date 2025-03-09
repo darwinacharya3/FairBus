@@ -24,46 +24,57 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🔄 JourneyHistoryScreen - initState called');
+    
+    // This is crucial - setting up the realtime database listener
+    debugPrint('🔄 JourneyHistoryScreen - calling setupRealtimeDatabaseListener');
     _databaseService.setupRealtimeDatabaseListener();
+    
+    debugPrint('🔄 JourneyHistoryScreen - calling _loadData');
     _loadData(); // Initial data load
   }
 
   // Load fresh data streams
   void _loadData() {
+    debugPrint('🔄 JourneyHistoryScreen - _loadData started');
     setState(() {
       // Create new stream instances to force fresh data fetching
       _journeysStream = _databaseService.getTodaysJourneys();
       _reportStream = _databaseService.getTodaysReport();
     });
-    debugPrint('Fresh data streams loaded');
+    debugPrint('✅ JourneyHistoryScreen - Fresh data streams loaded');
   }
 
   // Method to handle manual refresh
   Future<void> _refreshData() async {
-    debugPrint('Starting manual refresh...');
+    debugPrint('🔄 JourneyHistoryScreen - Starting manual refresh...');
     setState(() {
       _isRefreshing = true;
     });
     
     // Force Firebase cache refresh by recreating the listener
+    debugPrint('🔄 JourneyHistoryScreen - Recreating realtime database listener');
     _databaseService.setupRealtimeDatabaseListener();
     
     // Reload data with fresh streams
+    debugPrint('🔄 JourneyHistoryScreen - Reloading data streams');
     _loadData();
     
     // Add a small delay to ensure Firebase has time to respond
+    debugPrint('🔄 JourneyHistoryScreen - Waiting for Firebase response');
     await Future.delayed(const Duration(milliseconds: 1000));
     
     setState(() {
       _isRefreshing = false;
     });
     
-    debugPrint('Manual refresh completed');
+    debugPrint('✅ JourneyHistoryScreen - Manual refresh completed');
     return Future.value();
   }
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('🔄 JourneyHistoryScreen - build method called');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Journey History'),
@@ -96,7 +107,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
               stream: _reportStream,
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  debugPrint('Report Error: ${snapshot.error}');
+                  debugPrint('❌ JourneyHistoryScreen - Report Error: ${snapshot.error}');
                   return Card(
                     margin: const EdgeInsets.all(16),
                     child: Padding(
@@ -113,6 +124,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
                 }
 
                 if (!snapshot.hasData) {
+                  debugPrint('⚠️ JourneyHistoryScreen - No report data yet');
                   return const Card(
                     margin: EdgeInsets.all(16),
                     child: Padding(
@@ -122,6 +134,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
                   );
                 }
 
+                debugPrint('✅ JourneyHistoryScreen - Report data received: ${snapshot.data?.totalJourneys} journeys, ${snapshot.data?.totalAmount} amount');
                 return AmountCard(report: snapshot.data!);
               },
             ),
@@ -143,7 +156,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
                       stream: _journeysStream,
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
-                          debugPrint('Journeys Error: ${snapshot.error}');
+                          debugPrint('❌ JourneyHistoryScreen - Journeys Error: ${snapshot.error}');
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -167,12 +180,15 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
                         }
 
                         if (!snapshot.hasData) {
+                          debugPrint('⚠️ JourneyHistoryScreen - No journeys data yet');
                           return const Center(child: CircularProgressIndicator());
                         }
 
                         final journeys = snapshot.data!;
+                        debugPrint('✅ JourneyHistoryScreen - Journeys data received: ${journeys.length} journeys');
                         
                         if (journeys.isEmpty) {
+                          debugPrint('⚠️ JourneyHistoryScreen - No journeys for today');
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -195,6 +211,7 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
                           );
                         }
 
+                        debugPrint('🔄 JourneyHistoryScreen - Building ListView with ${journeys.length} journeys');
                         return ListView.builder(
                           itemCount: journeys.length,
                           itemBuilder: (context, index) {
@@ -221,9 +238,248 @@ class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
   @override
   void dispose() {
     // Clean up resources if needed
+    debugPrint('🔄 JourneyHistoryScreen - dispose called');
     super.dispose();
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// import 'package:flutter/material.dart';
+// import 'package:major_project/models/journey.dart';
+// import 'package:major_project/models/daily_reports.dart';
+// import 'package:major_project/services/database_service.dart';
+// import 'package:major_project/widgets/amount_card.dart';
+// import 'package:major_project/widgets/journey_card.dart';
+
+// class JourneyHistoryScreen extends StatefulWidget {
+//   const JourneyHistoryScreen({super.key});
+
+//   @override
+//   State<JourneyHistoryScreen> createState() => _JourneyHistoryScreenState();
+// }
+
+// class _JourneyHistoryScreenState extends State<JourneyHistoryScreen> {
+//   final DatabaseService _databaseService = DatabaseService();
+//   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
+  
+//   // Stream controllers to manage data
+//   Stream<List<Journey>>? _journeysStream;
+//   Stream<DailyReport>? _reportStream;
+//   bool _isRefreshing = false;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _databaseService.setupRealtimeDatabaseListener();
+//     _loadData(); // Initial data load
+//   }
+
+//   // Load fresh data streams
+//   void _loadData() {
+//     setState(() {
+//       // Create new stream instances to force fresh data fetching
+//       _journeysStream = _databaseService.getTodaysJourneys();
+//       _reportStream = _databaseService.getTodaysReport();
+//     });
+//     debugPrint('Fresh data streams loaded');
+//   }
+
+//   // Method to handle manual refresh
+//   Future<void> _refreshData() async {
+//     debugPrint('Starting manual refresh...');
+//     setState(() {
+//       _isRefreshing = true;
+//     });
+    
+//     // Force Firebase cache refresh by recreating the listener
+//     _databaseService.setupRealtimeDatabaseListener();
+    
+//     // Reload data with fresh streams
+//     _loadData();
+    
+//     // Add a small delay to ensure Firebase has time to respond
+//     await Future.delayed(const Duration(milliseconds: 1000));
+    
+//     setState(() {
+//       _isRefreshing = false;
+//     });
+    
+//     debugPrint('Manual refresh completed');
+//     return Future.value();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Journey History'),
+//         backgroundColor: Colors.green[600],
+//         actions: [
+//           // Refresh button in the app bar
+//           IconButton(
+//             icon: _isRefreshing 
+//                 ? const SizedBox(
+//                     width: 20, 
+//                     height: 20, 
+//                     child: CircularProgressIndicator(
+//                       color: Colors.white,
+//                       strokeWidth: 2,
+//                     ),
+//                   )
+//                 : const Icon(Icons.refresh),
+//             onPressed: _isRefreshing ? null : _refreshData,
+//             tooltip: 'Refresh',
+//           ),
+//         ],
+//       ),
+//       body: RefreshIndicator(
+//         key: _refreshIndicatorKey,
+//         onRefresh: _refreshData,
+//         child: Column(
+//           children: [
+//             // Amount Card
+//             StreamBuilder<DailyReport>(
+//               stream: _reportStream,
+//               builder: (context, snapshot) {
+//                 if (snapshot.hasError) {
+//                   debugPrint('Report Error: ${snapshot.error}');
+//                   return Card(
+//                     margin: const EdgeInsets.all(16),
+//                     child: Padding(
+//                       padding: const EdgeInsets.all(16),
+//                       child: Column(
+//                         children: [
+//                           const Icon(Icons.error_outline, color: Colors.red, size: 48),
+//                           const SizedBox(height: 8),
+//                           Text('Error: ${snapshot.error}'),
+//                         ],
+//                       ),
+//                     ),
+//                   );
+//                 }
+
+//                 if (!snapshot.hasData) {
+//                   return const Card(
+//                     margin: EdgeInsets.all(16),
+//                     child: Padding(
+//                       padding: EdgeInsets.all(16),
+//                       child: Center(child: CircularProgressIndicator()),
+//                     ),
+//                   );
+//                 }
+
+//                 return AmountCard(report: snapshot.data!);
+//               },
+//             ),
+
+//             // Journey History List
+//             Expanded(
+//               child: _isRefreshing
+//                   ? const Center(
+//                       child: Column(
+//                         mainAxisAlignment: MainAxisAlignment.center,
+//                         children: [
+//                           CircularProgressIndicator(),
+//                           SizedBox(height: 16),
+//                           Text('Refreshing data...'),
+//                         ],
+//                       ),
+//                     )
+//                   : StreamBuilder<List<Journey>>(
+//                       stream: _journeysStream,
+//                       builder: (context, snapshot) {
+//                         if (snapshot.hasError) {
+//                           debugPrint('Journeys Error: ${snapshot.error}');
+//                           return Center(
+//                             child: Column(
+//                               mainAxisAlignment: MainAxisAlignment.center,
+//                               children: [
+//                                 const Icon(Icons.error_outline, color: Colors.red, size: 48),
+//                                 const SizedBox(height: 8),
+//                                 Text('Error: ${snapshot.error}'),
+//                                 const SizedBox(height: 16),
+//                                 ElevatedButton.icon(
+//                                   onPressed: _refreshData,
+//                                   icon: const Icon(Icons.refresh),
+//                                   label: const Text('Try Again'),
+//                                   style: ElevatedButton.styleFrom(
+//                                     backgroundColor: Colors.green[600],
+//                                     foregroundColor: Colors.white,
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           );
+//                         }
+
+//                         if (!snapshot.hasData) {
+//                           return const Center(child: CircularProgressIndicator());
+//                         }
+
+//                         final journeys = snapshot.data!;
+                        
+//                         if (journeys.isEmpty) {
+//                           return Center(
+//                             child: Column(
+//                               mainAxisAlignment: MainAxisAlignment.center,
+//                               children: [
+//                                 const Icon(Icons.directions_bus_outlined, size: 48, color: Colors.grey),
+//                                 const SizedBox(height: 8),
+//                                 const Text('No journeys today'),
+//                                 const SizedBox(height: 16),
+//                                 ElevatedButton.icon(
+//                                   onPressed: _refreshData,
+//                                   icon: const Icon(Icons.refresh),
+//                                   label: const Text('Refresh'),
+//                                   style: ElevatedButton.styleFrom(
+//                                     backgroundColor: Colors.green[600],
+//                                     foregroundColor: Colors.white,
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           );
+//                         }
+
+//                         return ListView.builder(
+//                           itemCount: journeys.length,
+//                           itemBuilder: (context, index) {
+//                             return JourneyCard(journey: journeys[index]);
+//                           },
+//                         );
+//                       },
+//                     ),
+//             ),
+//           ],
+//         ),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: _isRefreshing ? null : _refreshData,
+//         backgroundColor: Colors.green[600],
+//         child: _isRefreshing
+//             ? const CircularProgressIndicator(color: Colors.white)
+//             : const Icon(Icons.refresh, color: Colors.white),
+//         tooltip: 'Refresh data',
+//       ),
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     // Clean up resources if needed
+//     super.dispose();
+//   }
+// }
 
 
 
